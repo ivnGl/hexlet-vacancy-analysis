@@ -1,25 +1,23 @@
-from django.views import View
-from .logs.logger import *
 from datetime import timedelta
-from django.utils import timezone
-
-from django.core.mail import send_mail
-from django.http import JsonResponse
-from django.shortcuts import redirect, render
-from django.template.loader import render_to_string
-from django.urls import reverse, reverse_lazy
-from django.utils.html import strip_tags
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.core.mail import send_mail
+from django.http import JsonResponse
+from django.shortcuts import redirect
+from django.urls import reverse
+from django.utils import timezone
+from django.utils.html import strip_tags
+from django.views import View
 
 from . import configs
 from .forms import CustomPasswordResetForm
+from .logs.logger import get_logger
 from .models import PasswordResetToken
 from .validators import is_valid_password
-from django.contrib.auth.tokens import PasswordResetTokenGenerator
 
 User = get_user_model()
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class PasswordResetView(View):

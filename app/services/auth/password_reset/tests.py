@@ -1,16 +1,15 @@
 from datetime import timedelta
-from django.urls import reverse_lazy
-from django.test import TestCase, Client
+
 from django.contrib.auth import get_user_model
 from django.core import mail
-from requests import patch
+from django.test import Client, TestCase
+from django.urls import reverse_lazy
+from django.utils import timezone
+
 from app.services.auth.password_reset import configs
 from app.services.auth.password_reset.models import PasswordResetToken
-from django.utils import timezone
-from app.services.auth.password_reset.logs.logger import *
 
 User = get_user_model()
-logger = logging.getLogger(__name__)
 
 
 class PasswordResetTestCase(TestCase):

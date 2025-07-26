@@ -1,4 +1,5 @@
 import logging
+
 from app.services.auth.password_reset import configs
 
 log_levels = {
@@ -15,3 +16,7 @@ logging.basicConfig(
     format="%(asctime)s  %(name)s  %(levelname)s: %(message)s",
     level=log_levels[configs.LOG_LEVEL],
 )
+
+
+def get_logger(name):
+    return logging.getLogger(name)
