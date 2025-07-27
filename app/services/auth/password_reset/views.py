@@ -1,5 +1,5 @@
 from datetime import timedelta
-from django_ratelimit.decorators import ratelimit
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.mail import send_mail
@@ -7,9 +7,11 @@ from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.decorators import method_decorator
 from django.utils.html import strip_tags
 from django.views import View
-from django.utils.decorators import method_decorator
+from django_ratelimit.decorators import ratelimit
+
 from . import configs
 from .forms import CustomPasswordResetForm
 from .logs.logger import get_logger
