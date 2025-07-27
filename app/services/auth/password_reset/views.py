@@ -1,5 +1,5 @@
 from datetime import timedelta
-
+from django_ratelimit.decorators import ratelimit
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.mail import send_mail
@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import strip_tags
 from django.views import View
-
+from django.utils.decorators import method_decorator
 from . import configs
 from .forms import CustomPasswordResetForm
 from .logs.logger import get_logger
@@ -48,7 +48,15 @@ class PasswordResetView(View):
             status=200,
         )
 
+    @method_decorator(ratelimit(key="ip", rate="3/h"))
+    @method_decorator(ratelimit(key="post:email", rate="3/h"))
     def post(self, request):
+        was_limited = getattr(request, "limited", False)
+        logger.info(f"Limit reached: [{was_limited}]")
+        if was_limited:
+            return JsonResponse(
+                {"error": "Too many requests. Try again later."}, status=429
+            )
         form = self.form_class(request.POST)
         if form.is_valid():
             email = form.cleaned_data["email"]
@@ -58,6 +66,7 @@ class PasswordResetView(View):
                 logger.error(f"['{email}']: email does not belong to any user")
                 user = None
             if user:
+                PasswordResetToken.mark_all_as_used(user)
                 token_hash = self.token_generator().make_token(user)
                 current_time = timezone.now()
                 time_out = timedelta(configs.PASSWORD_RESET_TIMEOUT)

@@ -12,3 +12,8 @@ class PasswordResetToken(models.Model):
     def mark_as_used(self):
         self.is_used = True
         self.save()
+
+    @classmethod
+    def mark_all_as_used(cls, user: User):
+        queryset = cls.objects.filter(is_used=False, user_id=user)
+        return queryset.update(is_used=True)
