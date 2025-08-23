@@ -37,8 +37,7 @@ class PasswordResetTests(PasswordResetTestCase):
         response = self.client.post(
             self.url, {"email": "testuser@example.com"}
         )
-
-        assert response.status_code == 200
+        assert response.props["status_code"] == 200
         token = PasswordResetToken.objects.filter(user_id=self.user.id).first()
         assert token.token_hash
         assert token.expires_at > timezone.now()
@@ -47,8 +46,8 @@ class PasswordResetTests(PasswordResetTestCase):
 
     def test_post_invalid_email(self):
         response = self.client.post(self.url, {"email": "invalid@example.com"})
-        assert response.status_code == 200
-        assert response.json()["status"] == "ok"
+        assert response.props["status_code"] == 200
+        assert response.props["status"] == "ok"
 
 
 class PasswordResetConfirmTests(PasswordResetTestCase):
@@ -58,8 +57,9 @@ class PasswordResetConfirmTests(PasswordResetTestCase):
             + f"?token={self.token.token_hash}"
         )
         response = self.client.get(url)
-        assert response.status_code == 200
-        assert response.json()["status"] == "ok"
+
+        assert response.props["status_code"] == 200
+        assert response.props["status"] == "ok"
 
     def test_get_expired_token(self):
         expired_token = PasswordResetToken.objects.create(
@@ -73,8 +73,8 @@ class PasswordResetConfirmTests(PasswordResetTestCase):
             + f"?token={expired_token.token_hash}"
         )
         response = self.client.get(url)
-        assert response.status_code == 400
-        assert "Ссылка недействительна" in response.json()["message"]
+        assert response.props["status_code"] == 400
+        assert "Ссылка недействительна" in response.props["message"]
 
     def test_post_valid_password(self):
         url = reverse_lazy("password_reset_confirm")
@@ -83,7 +83,7 @@ class PasswordResetConfirmTests(PasswordResetTestCase):
             "newPassword": "StrongPass123!",
         }
         response = self.client.post(url, data)
-        assert response.status_code == 200
+        assert response.props["status_code"] == 200
 
         self.user.refresh_from_db()
         self.token.refresh_from_db()
@@ -95,13 +95,13 @@ class PasswordResetConfirmTests(PasswordResetTestCase):
         data = {"token": self.token.token_hash, "newPassword": "weak"}
 
         response = self.client.post(url, data)
-        assert response.status_code == 422
-        assert "Слабый пароль" in response.json()["message"]
+        assert response.props["status_code"] == 422
+        assert "Слабый пароль" in response.props["message"]
 
     def test_post_invalid_token(self):
         url = reverse_lazy("password_reset_confirm")
         data = {"token": "invalid_token", "newPassword": "StrongPass123!"}
 
         response = self.client.post(url, data)
-        assert response.status_code == 400
-        assert "Недействительный токен" in response.json()["message"]
+        assert response.props["status_code"] == 400
+        assert "Недействительный токен" in response.props["message"]
