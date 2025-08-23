@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "inertia",
     "app.services.hh.hh_parser",
     "app.services.telegram.telegram_parser",
     "app.services.telegram.telegram_channels",
@@ -58,6 +59,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "inertia.middleware.InertiaMiddleware",
 ]
 
 ROOT_URLCONF = "app.urls"
@@ -172,3 +174,8 @@ EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "true").lower() in (
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 EMAIL_TIMEOUT = int(os.environ.get("EMAIL_TIMEOUT", 10))
+
+# inertia settings
+# CSRF_HEADER_NAME = "HTTP_X_XSRF_TOKEN"
+# CSRF_COOKIE_NAME = "XSRF-TOKEN"
+INERTIA_LAYOUT = "base.html"
