@@ -12,7 +12,6 @@ log_levels = {
 }
 
 logging.basicConfig(
-    filename=configs.LOG_FILE,
     format="%(asctime)s  %(name)s  %(levelname)s: %(message)s",
     level=log_levels[configs.LOG_LEVEL],
 )
