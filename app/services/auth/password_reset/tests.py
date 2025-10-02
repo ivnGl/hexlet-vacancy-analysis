@@ -1,4 +1,5 @@
 from datetime import timedelta
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
@@ -7,6 +8,7 @@ from django.utils import timezone
 
 from app.services.auth.password_reset import configs
 from app.services.auth.password_reset.models import PasswordResetToken
+from app.services.auth.password_reset.views import PasswordResetView
 
 User = get_user_model()
 
@@ -31,8 +33,10 @@ class PasswordResetTestCase(TestCase):
         self.token = PasswordResetToken.objects.create(**token_data)
 
 
+@patch.object(PasswordResetView, "send_reset_email")
 class PasswordResetTests(PasswordResetTestCase):
-    def test_post_valid_email(self):
+    def test_post_valid_email(self, mock_get_stats):
+        mock_get_stats.return_value = None
         response = self.client.post(
             self.url, {"email": "testuser@example.com"}
         )
@@ -41,7 +45,8 @@ class PasswordResetTests(PasswordResetTestCase):
         assert token.token_hash
         assert token.expires_at > timezone.now()
 
-    def test_post_invalid_email(self):
+    def test_post_invalid_email(self, mock_get_stats):
+        mock_get_stats.return_value = None
         response = self.client.post(self.url, {"email": "invalid@example.com"})
         assert response.props["status_code"] == 200
         assert response.props["status"] == "ok"
