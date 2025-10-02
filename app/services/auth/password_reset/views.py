@@ -1,8 +1,9 @@
 from datetime import timedelta
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
-from django.core.mail import send_mail
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -15,6 +16,7 @@ from inertia import render as inertia_render
 from . import configs
 from .logs.logger import get_logger
 from .models import PasswordResetToken
+from .tasks import send_mail_task
 from .validators import is_valid_password
 
 User = get_user_model()
@@ -32,9 +34,9 @@ class PasswordResetView(View):
     - Ограничение частоты запросов через декораторы.
     """
 
-    subject_template_name = "шаблон_тема_письма.txt"  # Шаблон темы письма
-    email_template_name = "шаблон_тело_письма.html"  # Шаблон тела письма
-    from_email = "test@test.com"  # Email-адрес отправителя
+    subject_template_name = "Password reset"  # Шаблон темы письма
+    email_template_name = "password_reset_email.html"  # Шаблон тела письма
+    from_email = settings.DEFAULT_FROM_EMAIL  # Email-адрес отправителя
     token_generator = PasswordResetTokenGenerator  # Генератор токенов
 
     def get(self, request):
@@ -139,48 +141,28 @@ class PasswordResetView(View):
         """
         Отправляет email с ссылкой для сброса пароля.
 
-        Использует шаблоны для темы и тела письма. Реализует многократную
-        попытку отправки при сбоях.
-
         Args:
             email (str): Адрес электронной почты получателя.
             reset_url (str): Ссылка для сброса пароля.
         """
-        # subject = render_to_string(self.subject_template_name)
-        # html_message = render_to_string(
-        #     self.email_template_name,
-        #     {
-        #         "reset_url": reset_url,
-        #     },
-        # )
         subject = self.subject_template_name
-        html_message = self.email_template_name
-
+        html_message = render_to_string(
+            self.email_template_name,
+            {
+                "email": email,
+                "reset_url": reset_url,
+            },
+        )
         plain_message = strip_tags(html_message)
-        max_retries = configs.MAX_RETRIES
 
-        for attempt in range(max_retries):
-            try:
-                send_mail(
-                    subject=subject,
-                    message=plain_message,
-                    html_message=html_message,
-                    from_email=self.from_email,
-                    recipient_list=[email],
-                    fail_silently=False,
-                )
-                logger.info(f"Password reset email sent to ['{email}']")
-                break
-            except Exception as e:
-                logger.warning(
-                    f"Attempt {attempt + 1} failed to send password "
-                    f"reset email to ['{email}']: {str(e)}"
-                )
-                if attempt == max_retries - 1:
-                    logger.error(
-                        f"Failed to send password reset email to ['{email}'] "
-                        f"after [{max_retries}] attempts"
-                    )
+        send_mail_task.delay(
+            subject=subject,
+            message=plain_message,
+            html_message=html_message,
+            from_email=self.from_email,
+            recipient_list=[email],
+            fail_silently=False,
+        )
 
 
 def redirect_mail_link(request):

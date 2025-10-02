@@ -175,7 +175,14 @@ EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 EMAIL_TIMEOUT = int(os.environ.get("EMAIL_TIMEOUT", 10))
 
+# email for send mail
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "")
+
 # inertia settings
 # CSRF_HEADER_NAME = "HTTP_X_XSRF_TOKEN"
 # CSRF_COOKIE_NAME = "XSRF-TOKEN"
 INERTIA_LAYOUT = "base.html"
+
+# Celery settings
+CELERY_BROKER_URL = "redis://localhost:6379"
+CELERY_RESULT_BACKEND = "redis://localhost:6379"

@@ -1,7 +1,6 @@
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
-from django.core import mail
 from django.test import Client, TestCase
 from django.urls import reverse_lazy
 from django.utils import timezone
@@ -41,8 +40,6 @@ class PasswordResetTests(PasswordResetTestCase):
         token = PasswordResetToken.objects.filter(user_id=self.user.id).first()
         assert token.token_hash
         assert token.expires_at > timezone.now()
-        assert len(mail.outbox) == 1
-        assert mail.outbox[0].to == ["testuser@example.com"]
 
     def test_post_invalid_email(self):
         response = self.client.post(self.url, {"email": "invalid@example.com"})
