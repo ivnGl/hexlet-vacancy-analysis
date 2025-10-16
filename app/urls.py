@@ -21,6 +21,7 @@ from app import views
 from app.services.auth.password_reset.views import redirect_mail_link
 
 urlpatterns = [
+    path('', views.index, name='index'),
     path('admin/', admin.site.urls),
     path('hh/', include('app.services.hh.hh_parser.urls')),
     path('superjob/', include('app.services.superjob.superjob_parser.urls')),
