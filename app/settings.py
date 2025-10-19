@@ -180,7 +180,7 @@ EMAIL_TIMEOUT = int(os.environ.get("EMAIL_TIMEOUT", 10))
 
 ## django-vite settings
 # use HMR or not.
-DJANGO_VITE_DEV_MODE = True
+DJANGO_VITE_DEV_MODE = DEBUG
 
 # Where ViteJS production assets are built.
 DJANGO_VITE_ASSETS_PATH = BASE_DIR / "app" / "frontend" / "static" / "dist"
