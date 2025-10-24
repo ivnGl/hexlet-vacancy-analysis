@@ -3,14 +3,15 @@ from django.urls import include, path
 from . import views
 
 urlpatterns = [
-    path('register/', views.CreateUserView.as_view(), name='register_user'),
+    path("register/", views.CreateUserView.as_view(), name="register_user"),
     path(
-        'activate/<uidb64>/<token>/',
+        "activate/<uidb64>/<token>/",
         views.ActivateUser.as_view(),
-        name='activate'
+        name="activate",
     ),
-    path('login/', views.LoginUserView.as_view(), name='login'),
-    path('logout/', views.LogoutUserView.as_view(), name='logout'),
-    path('csrf/', views.get_csrf_token, name='csrf'),
-    path('password/', include('app.services.auth.password_reset.urls')),
+    path("login/", views.LoginUserView.as_view(), name="login"),
+    path("logout/", views.LogoutUserView.as_view(), name="logout"),
+    path("csrf/", views.get_csrf_token, name="csrf"),
+    path("password/", include("app.services.auth.password_reset.urls")),
+    path("tinkoff_id/", include("app.services.auth.tinkoff_id.urls")),
 ]

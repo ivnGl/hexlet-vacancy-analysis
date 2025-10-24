@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "app.services.telegram.telegram_channels",
     "app.services.superjob.superjob_parser",
     "app.services.auth.password_reset",
+    "app.services.auth.tinkoff_id",
 ]
 
 AUTH_USER_MODEL = "users.User"
@@ -206,3 +207,13 @@ DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "")
 # Celery settings
 CELERY_BROKER_URL = "redis://localhost:6379"
 CELERY_RESULT_BACKEND = "redis://localhost:6379"
+
+# Tinkoff ID settings
+TINKOFF_ID_CLIENT_ID = os.getenv("TINKOFF_ID_CLIENT_ID", "")
+TINKOFF_ID_CLIENT_SECRET = os.getenv("TINKOFF_ID_CLIENT_SECRET", "")
+TINKOFF_ID_REDIRECT_URI = os.getenv("TINKOFF_ID_REDIRECT_URI", "")
+TINKOFF_ID_AUTH_URL = "https://id.tinkoff.ru/auth/authorize"
+TINKOFF_ID_TOKEN_URL = "https://id.tinkoff.ru/auth/token"
+TINKOFF_ID_USERINFO_URL = "https://id.tinkoff.ru/userinfo/userinfo"
+TINKOFF_ID_INTROSPECT_URL = "https://id.tinkoff.ru/auth/introspect"
+TINKOFF_ID_SCOPE = ["profile", "email"]
