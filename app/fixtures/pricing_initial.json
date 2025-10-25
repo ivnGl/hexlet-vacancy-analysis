@@ -5,7 +5,7 @@
     "fields": {
         "name": "Базовый",
         "price": 0,
-        "currency": "₽",
+        "currency": "RUB",
         "period": "навсегда",
         "description": "Для начинающих специалистов",
         "is_active": true,
@@ -25,7 +25,7 @@
     "fields": {
         "name": "Профи",
         "price": 490,
-        "currency": "₽",
+        "currency": "RUB",
         "period": "мес",
         "description": "Для активного поиска работы",
         "is_active": true,
@@ -47,7 +47,7 @@
     "fields": {
         "name": "Премиум",
         "price": 990,
-        "currency": "₽",
+        "currency": "RUB",
         "period": "мес",
         "description": "Для профессионалов",
         "is_active": true,

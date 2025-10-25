@@ -4,7 +4,7 @@ from django.db import models
 class PricingPlan(models.Model):
     name = models.CharField(max_length=100, unique=True)
     price = models.PositiveIntegerField(default=0)
-    currency = models.CharField(max_length=3, default='₽')
+    currency = models.CharField(max_length=3, default='RUB')
     period = models.CharField(max_length=50, default='мес')
     description = models.CharField(max_length=50)
     is_active = models.BooleanField(default=True)
