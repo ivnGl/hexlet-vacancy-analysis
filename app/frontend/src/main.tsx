@@ -1,8 +1,9 @@
-import { createRoot } from "react-dom/client";
-import { createInertiaApp } from "@inertiajs/react";
 import { InertiaProgress } from '@inertiajs/progress';
+import { createInertiaApp } from "@inertiajs/react";
+import { MantineProvider } from '@mantine/core';
+import '@mantine/core/styles.css';
 import axios from 'axios';
-import React from 'react';
+import { createRoot } from "react-dom/client";
 
 document.addEventListener('DOMContentLoaded', () => {
     const csrfMeta = document.querySelector('meta[name=csrf-token]');
@@ -13,9 +14,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     createInertiaApp({
         resolve: (name) => import(`./components/pages/${name}.tsx`),
-        setup: ({ el, App, props }) => {
-            const root = createRoot(el);
-            root.render(React.createElement(App, props));
+        setup({ el, App, props }) {
+            createRoot(el).render(
+                <MantineProvider defaultColorScheme='dark'><App {...props} /></MantineProvider>
+            );
         },
     });
 });
