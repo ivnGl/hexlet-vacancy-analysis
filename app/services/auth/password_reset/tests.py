@@ -37,9 +37,7 @@ class PasswordResetTestCase(TestCase):
 class PasswordResetTests(PasswordResetTestCase):
     def test_post_valid_email(self, mock_get_stats):
         mock_get_stats.return_value = None
-        response = self.client.post(
-            self.url, {"email": "testuser@example.com"}
-        )
+        response = self.client.post(self.url, {"email": "testuser@example.com"})
         assert response.props["status_code"] == 200
         token = PasswordResetToken.objects.filter(user_id=self.user.id).first()
         assert token.token_hash
@@ -54,10 +52,7 @@ class PasswordResetTests(PasswordResetTestCase):
 
 class PasswordResetConfirmTests(PasswordResetTestCase):
     def test_get_valid_token(self):
-        url = (
-            reverse_lazy("password_reset_confirm")
-            + f"?token={self.token.token_hash}"
-        )
+        url = reverse_lazy("password_reset_confirm") + f"?token={self.token.token_hash}"
         response = self.client.get(url)
 
         assert response.props["status_code"] == 200
@@ -71,8 +66,7 @@ class PasswordResetConfirmTests(PasswordResetTestCase):
         )
 
         url = (
-            reverse_lazy("password_reset_confirm")
-            + f"?token={expired_token.token_hash}"
+            reverse_lazy("password_reset_confirm") + f"?token={expired_token.token_hash}"
         )
         response = self.client.get(url)
         assert response.props["status_code"] == 400
