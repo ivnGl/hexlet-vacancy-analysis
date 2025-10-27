@@ -1,17 +1,16 @@
-from http import HTTPStatus
-from unittest.mock import patch
-from inertia.testcases import InertiaTestCase
+from inertia.test import InertiaTestCase
 from django.test import TestCase
 from django.urls import reverse
 from .models import PricingPlan, PlanFeature
 
 class PricingTest(InertiaTestCase):
     def setUp(self):
+        super().setUp()
         self.plan = PricingPlan.objects.create(name='Профи', price=490.00)
         self.feature = PlanFeature.objects.create(name='Безлимитный поиск')
         self.plan.features.add(self.feature)
 
-    def test_pricing_view(self, mock_render):
+    def test_pricing_view(self):
         response = self.client.get(reverse('pricing_page'))
         self.assertComponent(response, 'PricingPage')
         self.assertPropsHas(response, 'plans')
@@ -22,7 +21,7 @@ class PricingTest(InertiaTestCase):
         self.assertEqual(len(plan_props['features']), 1)
         self.assertEqual(plan_props['features'][0]['name'], 'Безлимитный поиск')
 
-    def test_pricing_view_no_active_plans(self, mock_render):
+    def test_pricing_view_no_active_plans(self):
         PricingPlan.objects.all().update(is_active=False)
         response = self.client.get(reverse('pricing_page'))
         self.assertComponent(response, 'PricingPage')
