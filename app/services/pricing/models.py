@@ -10,6 +10,7 @@ class PricingPlan(models.Model):
     description = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
     order = models.PositiveIntegerField(default=0)
+    features = models.ManyToManyField('PlanFeature', related_name='plans', blank=True)
 
     class Meta:
         ordering = ['order']
@@ -24,4 +25,3 @@ class PlanFeature(models.Model):
     def __str__(self):
         return self.name
 
-PricingPlan.features = models.ManyToManyField(PlanFeature, related_name='plans', blank=True)
