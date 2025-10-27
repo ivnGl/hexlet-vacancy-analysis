@@ -1,6 +1,5 @@
 from django.db import models
 
-from django.db import models
 
 class PricingPlan(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -17,6 +16,7 @@ class PricingPlan(models.Model):
 
     def __str__(self):
         return self.name
+
 
 class PlanFeature(models.Model):
     name = models.CharField(max_length=200)

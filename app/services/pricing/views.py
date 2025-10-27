@@ -1,6 +1,8 @@
 from django.views import View
 from inertia import render as inertia_render
+
 from .models import PricingPlan
+
 
 class PricingView(View):
 

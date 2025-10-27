@@ -1,7 +1,8 @@
-from inertia.test import InertiaTestCase
-from django.test import TestCase
 from django.urls import reverse
-from .models import PricingPlan, PlanFeature
+from inertia.test import InertiaTestCase
+
+from .models import PlanFeature, PricingPlan
+
 
 class PricingTest(InertiaTestCase):
     def setUp(self):
