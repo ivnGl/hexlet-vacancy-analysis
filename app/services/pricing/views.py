@@ -23,4 +23,4 @@ class PricingView(View):
                 for plan in plans
             ]
         }
-        return inertia_render(request, 'PricingPage, props')
+        return inertia_render(request, 'PricingPage', props)
