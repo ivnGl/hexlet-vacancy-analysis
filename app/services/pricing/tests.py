@@ -12,9 +12,10 @@ class PricingTest(InertiaTestCase):
         self.plan.features.add(self.feature)
 
     def test_pricing_view(self):
-        response = self.client.get(reverse('pricing_page'))
-        self.assertPropsHas(response, 'plans')
-        props = self.getProps(response)
+        self.client.get(reverse('pricing_page'))
+        self.assertComponentUsed('PricingPage')
+        props = self.props()
+        self.assertIn('plans', props)
         self.assertEqual(len(props['plans']), 1)
         plan_props = props['plans'][0]
         self.assertEqual(plan_props['name'], 'Профи')
@@ -23,8 +24,9 @@ class PricingTest(InertiaTestCase):
 
     def test_pricing_view_no_active_plans(self):
         PricingPlan.objects.all().update(is_active=False)
-        response = self.client.get(reverse('pricing_page'))
-        props = self.getProps(response)
+        self.client.get(reverse('pricing_page'))
+        self.assertComponentUsed('PricingPage')
+        props = self.props()
         self.assertEqual(len(props['plans']), 0)
 
     def test_pricing_plan_creation_with_features(self):
