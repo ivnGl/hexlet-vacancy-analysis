@@ -1,5 +1,7 @@
 from django.contrib import admin
+
 from .models import AgencyPlanFeature, AgencyPricingPlan, CompanyInquiry
+
 
 @admin.register(AgencyPricingPlan)
 class AgencyPricingPlanAdmin(admin.ModelAdmin):
@@ -7,9 +9,11 @@ class AgencyPricingPlanAdmin(admin.ModelAdmin):
     list_editable = ("price", "is_active", "order")
     filter_horizontal = ("features",)
 
+
 @admin.register(AgencyPlanFeature)
 class AgencyPlanFeatureAdmin(admin.ModelAdmin):
     list_display = ("name",)
+
 
 @admin.register(CompanyInquiry)
 class CompanyInquiryAdmin(admin.ModelAdmin):

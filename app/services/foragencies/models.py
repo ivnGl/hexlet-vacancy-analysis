@@ -1,7 +1,6 @@
-from tokenize import blank_re
-from xml.dom.pulldom import default_bufsize
 
 from django.db import models
+
 
 class AgencyPricingPlan(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -12,7 +11,9 @@ class AgencyPricingPlan(models.Model):
     is_active = models.BooleanField(default=True)
     order = models.PositiveIntegerField(default=0)
 
-    features = models.ManyToManyField('AgencyPlanFeature', related_name='plans', blank=True)
+    features = models.ManyToManyField(
+        'AgencyPlanFeature', related_name='plans', blank=True
+    )
 
     class Meta:
         ordering = ['order']
@@ -20,12 +21,14 @@ class AgencyPricingPlan(models.Model):
     def __str__(self):
         return self.name
 
+
 class AgencyPlanFeature(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
 
     def __str__(self):
         return self.name
+
 
 class CompanyInquiry(models.Model):
     name = models.CharField(max_length=200)
