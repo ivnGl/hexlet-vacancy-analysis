@@ -1,4 +1,7 @@
+import json
+
 from django.core.exceptions import ValidationError
+from django.db import IntegrityError
 from django.http import JsonResponse
 from django.views import View
 from inertia import render as inertia_render
@@ -29,13 +32,28 @@ class AgencyView(View):
         return inertia_render(request, 'AgencyPricingPage', props)
 
     def post(self, request):
-        data = request.POST or request.json()
-        try:
-            if not all(key in data for key in ['name', 'email']):
-                raise ValidationError('Обязательные поля: name и email')
-            if not data.get('email', '').count('@'):
-                raise ValueError('Invalid email')
+        if request.content_type == 'application/json':
+            try:
+                data = json.loads(request.body.decode('utf-8'))
+            except json.JSONDecodeError:
+                return JsonResponse(
+                    {'success': False, 'error': 'Invalid JSON'},
+                    status=400
+                )
+        else:
+            data = request.POST.dict()
 
+        if not all(key in data for key in ['name', 'email']):
+            return JsonResponse(
+                {'success': False, 'error': 'Обязательные поля: name и email'},
+                status=400
+            )
+        if not data.get('email', '').count('@'):
+            return JsonResponse(
+                {'success': False, 'error': 'Некорректный email'},
+                status=400
+            )
+        try:
             CompanyInquiry.objects.create(
                 name=data.get('name'),
                 email=data.get('email'),
@@ -44,14 +62,14 @@ class AgencyView(View):
             )
             return JsonResponse({'success': True, 'message': 'Заявка отправлена'})
 
+        except IntegrityError as e:
+            return JsonResponse(
+                {'success': False, 'error': f'DB integrity error: {str(e)}'},
+                status=400
+            )
         except ValidationError as e:
             return JsonResponse(
                 {'success': False, 'error': str(e)},
-                status=400
-            )
-        except ValueError as e:
-            return JsonResponse(
-                {'success': False, 'error': f'Validation error: {str(e)}'},
                 status=400
             )
         except Exception:
