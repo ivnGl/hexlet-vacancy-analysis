@@ -1,7 +1,6 @@
 import json
 
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError
 from django.http import JsonResponse
 from django.views import View
 from inertia import render as inertia_render
@@ -62,11 +61,6 @@ class AgencyView(View):
             )
             return JsonResponse({'success': True, 'message': 'Заявка отправлена'})
 
-        except IntegrityError as e:
-            return JsonResponse(
-                {'success': False, 'error': f'DB integrity error: {str(e)}'},
-                status=400
-            )
         except ValidationError as e:
             return JsonResponse(
                 {'success': False, 'error': str(e)},

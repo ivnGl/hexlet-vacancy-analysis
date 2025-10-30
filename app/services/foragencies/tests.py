@@ -68,3 +68,17 @@ class ForAgenciesTest(InertiaTestCase):
             response.content,
             {'success': False, 'error': 'Обязательные поля: name и email', }
         )
+
+    def test_agency_view_post_wrong_email(self):
+        data = {
+            'name': 'Post Co',
+            'email': 'postemail.com',
+            'phone': '789',
+            'message': 'Post inquiry'
+        }
+        response = self.client.post(reverse('foragencies_page'), data)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST.value)
+        self.assertJSONEqual(
+            response.content,
+            {'success': False, 'error': 'Некорректный email', }
+        )
