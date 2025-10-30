@@ -35,7 +35,7 @@ class CompanyInquiry(models.Model):
     email = models.EmailField()
     phone = models.CharField(max_length=20, blank=True)
     message = models.TextField(blank=True)
-    created = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     is_processed = models.BooleanField(default=False)
 
     def __str__(self):

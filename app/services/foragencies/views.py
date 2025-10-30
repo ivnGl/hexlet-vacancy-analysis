@@ -31,13 +31,13 @@ class AgencyView(View):
     def post(self, request):
         data = request.POST or request.json()
         try:
-            if not all(key in data for key in ['company_name', 'email']):
-                raise ValidationError('Обязательные поля: company_name и email')
+            if not all(key in data for key in ['name', 'email']):
+                raise ValidationError('Обязательные поля: name и email')
             if not data.get('email', '').count('@'):
                 raise ValueError('Invalid email')
 
             CompanyInquiry.objects.create(
-                company_name=data.get('company_name'),
+                name=data.get('name'),
                 email=data.get('email'),
                 phone=data.get('phone', ''),
                 message=data.get('message', ''),
