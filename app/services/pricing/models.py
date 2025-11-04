@@ -3,7 +3,7 @@ from django.db import models
 
 class PricingPlan(models.Model):
     name = models.CharField(max_length=100, unique=True)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+    price = models.PositiveIntegerField(default=0)
     currency = models.CharField(max_length=3, default='₽')
     period = models.CharField(max_length=50, default='мес')
     description = models.CharField(max_length=50)
