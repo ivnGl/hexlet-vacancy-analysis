@@ -13,7 +13,7 @@ class PricingView(View):
                 {
                     'id': plan.id,
                     'name': plan.name,
-                    'price': float(plan.price),
+                    'price': plan.price,
                     'currency': plan.currency,
                     'period': plan.period,
                     'description': plan.description,
