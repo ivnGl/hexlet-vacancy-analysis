@@ -16,12 +16,12 @@ class AgencyView(View):
                 {
                     'id': plan.id,
                     'name': plan.name,
-                    'price': float(plan.price),
+                    'price': f"{plan.price:,}",
                     'currency': plan.currency,
                     'period': plan.period,
                     'description': plan.description,
                     'features': [
-                        {'name': feature.name, 'description': feature.description}
+                        {'name': feature.name}
                         for feature in plan.features.all()
                     ]
                 }
@@ -42,9 +42,12 @@ class AgencyView(View):
         else:
             data = request.POST.dict()
 
-        if not all(key in data for key in ['name', 'email']):
+        if not all(key in data for key in ['company_name', 'email']):
             return JsonResponse(
-                {'success': False, 'error': 'Обязательные поля: name и email'},
+                {
+                    'success': False,
+                    'error': 'Обязательные поля: Название компании и email'
+                },
                 status=400
             )
         if not data.get('email', '').count('@'):
@@ -54,12 +57,12 @@ class AgencyView(View):
             )
         try:
             CompanyInquiry.objects.create(
+                company_name=data.get('company_name'),
                 name=data.get('name'),
                 email=data.get('email'),
                 phone=data.get('phone', ''),
-                message=data.get('message', ''),
             )
-            return JsonResponse({'success': True, 'message': 'Заявка отправлена'})
+            return JsonResponse({'success': True})
 
         except ValidationError as e:
             return JsonResponse(

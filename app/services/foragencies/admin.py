@@ -17,7 +17,14 @@ class AgencyPlanFeatureAdmin(admin.ModelAdmin):
 
 @admin.register(CompanyInquiry)
 class CompanyInquiryAdmin(admin.ModelAdmin):
-    list_display = ("name", "email", "phone", "created_at", "is_processed")
+    list_display = (
+        "company_name",
+        "name",
+        "email",
+        "phone",
+        "created_at",
+        "is_processed"
+    )
     list_filter = ("is_processed", "created_at")
     list_editable = ("is_processed",)
-    search_fields = ("name", "email")
+    search_fields = ("company_name", "email")

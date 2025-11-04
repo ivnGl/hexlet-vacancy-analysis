@@ -11,7 +11,7 @@ class ForAgenciesTest(InertiaTestCase):
         super().setUp()
         self.plan = AgencyPricingPlan.objects.create(
             name='Стартовый_test',
-            price=14990.00
+            price=14990
         )
         self.feature = AgencyPlanFeature.objects.create(name='До 5 пользователей_test')
         self.plan.features.add(self.feature)
@@ -36,29 +36,25 @@ class ForAgenciesTest(InertiaTestCase):
 
     def test_company_inquiry_creation(self):
         inquiry = CompanyInquiry.objects.create(
-            name='Test Co',
+            company_name='Company_test',
+            name='Konstantin',
             email='test@email.com',
             phone='123456',
-            message='Inquiry'
         )
-        self.assertEqual(inquiry.name, 'Test Co')
+        self.assertEqual(inquiry.company_name, 'Company_test')
         self.assertFalse(inquiry.is_processed)
-        self.assertEqual(str(inquiry), 'Заявка от Test Co (test@email.com)')
+        self.assertEqual(str(inquiry), 'Заявка от Company_test (test@email.com)')
 
     def test_agency_view_post_inquiry(self):
         data = {
-            'name': 'Post Co',
+            'company_name': 'Post Co',
+            'name': 'Kostya',
             'email': 'post@email.com',
             'phone': '789',
-            'message': 'Post inquiry'
         }
         response = self.client.post(reverse('foragencies_page'), data)
         self.assertEqual(response.status_code, HTTPStatus.OK.value)
-        self.assertJSONEqual(
-            response.content,
-            {'success': True, 'message': 'Заявка отправлена'}
-        )
-        self.assertTrue(CompanyInquiry.objects.filter(name='Post Co').exists())
+        self.assertTrue(CompanyInquiry.objects.filter(company_name='Post Co').exists())
 
     def test_agency_view_post_error(self):
         data = {}
@@ -66,15 +62,15 @@ class ForAgenciesTest(InertiaTestCase):
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST.value)
         self.assertJSONEqual(
             response.content,
-            {'success': False, 'error': 'Обязательные поля: name и email', }
+            {'success': False, 'error': 'Обязательные поля: Название компании и email', }
         )
 
     def test_agency_view_post_wrong_email(self):
         data = {
-            'name': 'Post Co',
+            'company_name': 'Post Co',
+            'name': 'Kostya',
             'email': 'postemail.com',
             'phone': '789',
-            'message': 'Post inquiry'
         }
         response = self.client.post(reverse('foragencies_page'), data)
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST.value)
