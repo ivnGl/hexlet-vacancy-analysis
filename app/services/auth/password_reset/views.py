@@ -1,3 +1,4 @@
+import logging
 from datetime import timedelta
 
 from django.conf import settings
@@ -14,13 +15,12 @@ from inertia import location
 from inertia import render as inertia_render
 
 from . import configs
-from .logs.logger import get_logger
 from .models import PasswordResetToken
 from .tasks import send_mail_task
 from .validators import is_valid_password
 
 User = get_user_model()
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class PasswordResetView(View):

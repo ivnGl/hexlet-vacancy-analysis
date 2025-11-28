@@ -1,11 +1,11 @@
+import logging
+
 from celery import shared_task
 from django.core.mail import send_mail
 
 from app.services.auth.password_reset import configs
 
-from .logs.logger import get_logger
-
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 @shared_task(
