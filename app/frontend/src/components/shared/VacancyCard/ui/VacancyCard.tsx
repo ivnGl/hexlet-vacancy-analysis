@@ -15,30 +15,31 @@ export const VacancyCard: React.FC<VacancyCardPropsWrapper> = ({ props }) => {
 
   const [skillsExpanded, setSkillsExpanded] = useState(false);
 
-  const skillsCutDesktop = skills.slice(0,12);
-  const remainingSkillsCount = skills.length - 3;
-  const hasMoreSkills = skills.length > 3;
+  const skillsCutDesktop = skills ? skills.slice(0, 12) : [];
 
-  const displayedSkills = skillsExpanded ? skills : skills.slice(0, 3);
+  const remainingSkillsCount = skills ? skills.length - 3 : 0;
+  const hasMoreSkills = skills ? skills.length > 3 : false;
+
+  const displayedSkills = skillsExpanded ? (skills || []) : (skills ? skills.slice(0, 3) : []);
 
   const handleCardLink = (e: React.MouseEvent) => {
     e.preventDefault();
-    router.get(`/vacancies/${id}`)
+    router.get(`/vacancies/${id}`);
   };
 
   const handleButtonLink = (e: React.MouseEvent) => {
     e.stopPropagation();
-    window.open(url, '_blank')
-  }
+    window.open(url, '_blank');
+  };
 
   return (
-     <Card 
-      shadow="sm" 
-      padding="lg" 
-      radius="md" 
-      withBorder 
-      mx="auto" 
-      style={{ width: '100%', cursor: 'pointer'}} 
+     <Card
+      shadow="sm"
+      padding="lg"
+      radius="md"
+      withBorder
+      mx="auto"
+      style={{ width: '100%', cursor: 'pointer'}}
       mb={20}
       onClick={handleCardLink}
       >
@@ -52,17 +53,17 @@ export const VacancyCard: React.FC<VacancyCardPropsWrapper> = ({ props }) => {
 
             {/* Информация о компании */}
             <Group gap='xs'>
-              {company ? 
+              {company ?
                 <Group gap={5}>
                   <Building2 size={16} />
-                  <Text size="md">{company.name}</Text>
+                  <Text size="md">{company}</Text>
                 </Group> :
                 <Text fw={700} size="md" c="#0d2e4e">Название компании не указано</Text>
               }
-              {city ? 
+              {city ?
                 <Group gap={5}>
                   <MapPin size={16} />
-                  <Text>{city.name}</Text>
+                  <Text>{city}</Text>
                 </Group> :
                 <Text fw={700} size="md" c="#0d2e4e">Город не указан</Text>
               }
@@ -73,8 +74,8 @@ export const VacancyCard: React.FC<VacancyCardPropsWrapper> = ({ props }) => {
             <Group wrap="wrap" gap="xs">
               {skills && skills.length > 0 ? (
                 skillsCutDesktop.map((skill) => (
-                  <Badge 
-                    key={skill} 
+                  <Badge
+                    key={skill}
                     color="#20B0B4"
                     variant="outline"
                     size="md"
@@ -91,15 +92,15 @@ export const VacancyCard: React.FC<VacancyCardPropsWrapper> = ({ props }) => {
         </Box>
 
         {/* Правая часть */}
-        
+
         <Stack gap="md" align="flex-end">
           {salary ?
           <Text size="xl" fw={700} c='#20B0B4'>{salary}</Text> :
           <Text size="xl" fw={700} c='#0d2e4e'>Зарплата не указана</Text>
           }
-          <Button 
-            w='fit-content' 
-            color="#20B0B4" 
+          <Button
+            w='fit-content'
+            color="#20B0B4"
             radius='md'
             onClick={handleButtonLink}
           >
@@ -118,14 +119,14 @@ export const VacancyCard: React.FC<VacancyCardPropsWrapper> = ({ props }) => {
 
         {/* Компания и город */}
         <Group gap='xs'>
-          {company ? 
+          {company ?
           <Group gap={5}>
             <Building2 size={16} />
               <Text size="md">{company.name}</Text>
           </Group> :
           <Text fw={700} size="md" c="#0d2e4e">Название компании не указано</Text>
           }
-          {city ? 
+          {city ?
           <Group gap={5}>
             <MapPin size={16} />
             <Text>{city.name}</Text>
@@ -149,8 +150,8 @@ export const VacancyCard: React.FC<VacancyCardPropsWrapper> = ({ props }) => {
             {skills && skills.length > 0 ? (
               <>
                 {displayedSkills.map((skill) => (
-                  <Badge 
-                    key={skill} 
+                  <Badge
+                    key={skill}
                     color="#20B0B4"
                     variant="outline"
                     size="md"
@@ -159,7 +160,7 @@ export const VacancyCard: React.FC<VacancyCardPropsWrapper> = ({ props }) => {
                     {skill}
                   </Badge>
                 ))}
-                
+
                 {/* Кнопка для показа/скрытия навыков */}
                 {hasMoreSkills && (
                   <Button
@@ -167,7 +168,7 @@ export const VacancyCard: React.FC<VacancyCardPropsWrapper> = ({ props }) => {
                     color="#20B0B4"
                     size="compact-md"
                     radius='xl'
-                    style={{ 
+                    style={{
                       height: '32px',
                       flexShrink: 0,
                       display: 'flex',
@@ -191,10 +192,11 @@ export const VacancyCard: React.FC<VacancyCardPropsWrapper> = ({ props }) => {
           </Group>
         </Stack>
 
-        <Button 
-          color="#20B0B4" 
-          radius='md' 
+        <Button
+          color="#20B0B4"
+          radius='md'
           fullWidth
+          onClick={handleButtonLink}
         >
           <Group gap={10}>
             <Send size={15}/>
