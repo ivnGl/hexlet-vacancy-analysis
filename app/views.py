@@ -15,21 +15,22 @@ def index(request):
     )
 
 
+last_page = 1
+
+
 def vacancy(request):
     VACANCY_PER_PAGE = 2
     HH_VACANCY_PER_PAGE = 4
     PAGE = 0
+    global last_page
 
-    page_number = request.GET.get("page", 1)
+    page_number = int(request.GET.get("page", 1))
     hh_page_number = int(page_number) - 1
 
-    last_page = int(max(
-        2, (HH_VACANCY_PER_PAGE * int(page_number)) / VACANCY_PER_PAGE
-    ))
-
     search = request.GET.get("search", "")
+
     print(page_number, last_page)
-    
+
     if page_number == last_page:
         params = {
             "text": search,
@@ -62,6 +63,9 @@ def vacancy(request):
         )
     paginator = Paginator(vacancies, VACANCY_PER_PAGE)
     page_obj = paginator.get_page(page_number)
+
+
+    last_page = paginator.num_pages
 
     current_page = page_obj.number
 
