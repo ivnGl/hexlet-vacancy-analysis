@@ -1,7 +1,7 @@
 import { router } from '@inertiajs/react';
 import { Flex, Pagination, TextInput } from '@mantine/core';
 import type { ChangeEvent } from 'react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import type { VacancyCardProps } from '../../types';
 import { VacancyCard } from '../shared/VacancyCard';
@@ -21,29 +21,48 @@ type QueryState = {
 };
 
 const DEFAULT_QUERY: QueryState = { search: '' };
+const QUERY_DELAY: number = 2000
+
+function useDebounce(value: QueryState, delay: number) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 function VacancyPage({ vacancies, pagination }: VacancyPageProps) {
   const [query, setQuery] = useState<QueryState>(DEFAULT_QUERY);
+  const debouncedQuery = useDebounce(query, QUERY_DELAY)
+
 console.log(vacancies)
   const handlePageChange = useCallback(
     (pageNumber: number) => {
-      router.get('', { ...query, page: pageNumber }, { preserveState: true, replace: true });
+      router.get('', { ...debouncedQuery, page: pageNumber }, { preserveState: true, replace: true });
     },
-    [query],
+    [debouncedQuery],
   );
 
-  const handleSearch = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+  const handleSearch = (event: ChangeEvent<HTMLInputElement>) => {
     setQuery((prev) => ({ ...prev, search: event.target.value }));
-  }, []);
-
-  const hasVacancies = useMemo(() => vacancies && vacancies.length > 0, [vacancies]);
+  };
 
   useEffect(() => {
-    router.get('', query, {
+    router.get('', { ...debouncedQuery, page: 1 }, {
       preserveState: true,
       replace: true,
     });
-  }, [query]);
+  }, [debouncedQuery]);
+
+  if(!vacancies) return "Loading..."
 
   return (
     <>
@@ -56,13 +75,12 @@ console.log(vacancies)
         value={query.search}
       />
 
-      {hasVacancies && (
         <Flex direction="column" gap="md">
           {vacancies.map((vacancy) => (
             <VacancyCard key={vacancy.id} props={vacancy} />
           ))}
         </Flex>
-      )}
+
 
       <Pagination
         total={pagination.total_pages}

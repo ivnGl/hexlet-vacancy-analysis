@@ -3,71 +3,82 @@ from django.db.models import Q
 from django.http import JsonResponse
 from inertia import render as inertia_render
 
+from app.services.superjob.superjob_parser.views import superjob_vacancy_parse
+
 from .services.hh.hh_parser.models import Vacancy
-from .services.hh.hh_parser.views import vacancy_list
+from .services.hh.hh_parser.views import hh_vacancy_parse
+
+VACANCIES_PER_PAGE = 2
+HH_AREA_DEFAULT = 1
+HH_PER_PAGE_DEFAULT = 4
 
 
 def index(request):
-    return inertia_render(
-        request,
-        "HomePage",
-        props={},
-    )
+    """Render home page."""
+    return inertia_render(request, "HomePage", props={})
 
 
-last_page = 1
+def query_vacancies(search_query: str = "") -> list[dict[str, str]]:
+    """Return serialized vacancies filtered by optional search query."""
+    qs = Vacancy.objects.select_related("company", "city")
+
+    if search_query:
+        qs = qs.filter(
+            Q(title__icontains=search_query)
+            | Q(company__name__icontains=search_query)
+            | Q(description__icontains=search_query)
+        )
+
+    return [
+        {
+            "title": v.title,
+            "salary": v.salary,
+            "company": v.company.name if v.company else "",
+            "city": v.city.name if v.city else "",
+            "url": v.url,
+            "skills": v.skills,
+            "experience": v.experience,
+            "employment": v.employment,
+            "work_format": v.work_format,
+            "schedule": v.schedule,
+            "description": v.description,
+            "address": v.address,
+            "contacts": v.contacts,
+            "published_at": v.published_at,
+        }
+        for v in qs
+    ]
+
+
+async def refetch():
+    pass
 
 
 def vacancy(request):
-    VACANCY_PER_PAGE = 2
-    HH_VACANCY_PER_PAGE = 4
-    PAGE = 0
-    global last_page
-
+    """Render paginated vacancy list with optional search filtering."""
     page_number = int(request.GET.get("page", 1))
-    hh_page_number = int(page_number) - 1
+    search_query = request.GET.get("search", "").strip()
 
-    search = request.GET.get("search", "")
-
-    print(page_number, last_page)
-
-    if page_number == last_page:
-        params = {
-            "text": search,
-            "area": 1,
-            "page": hh_page_number,
-            "per_page": 4,
-        }
-        vacancy_list(params=params)
-
-    qs = Vacancy.objects.select_related("company", "city").all()
-
-    if search:
-        qs = qs.filter(
-            Q(title__icontains=search)
-            | Q(company__name__icontains=search)
-            | Q(description__icontains=search)
-        )
-    else:
-        qs = Vacancy.objects.select_related("company", "city").all()
-    vacancies = []
-    for vacancy in qs:
-        vacancies.append(
-            {
-                "title": vacancy.title,
-                "salary": vacancy.salary,
-                "company": vacancy.company.name if vacancy.company else "",
-                "city": vacancy.city.name if vacancy.city else "",
-                "url": vacancy.url,
-            }
-        )
-    paginator = Paginator(vacancies, VACANCY_PER_PAGE)
+    vacancies = query_vacancies(search_query)
+    paginator = Paginator(vacancies, VACANCIES_PER_PAGE)
     page_obj = paginator.get_page(page_number)
 
+    """Auto-fetch additional vacancies from HH when user reaches the last page."""
+    if page_obj.number == paginator.num_pages:
+        params = {
+            "text": search_query,
+            "area": HH_AREA_DEFAULT,
+            "per_page": HH_PER_PAGE_DEFAULT,
+            "page": page_obj.number - 1,
+        }
 
-    last_page = paginator.num_pages
+        hh_vacancy_parse(params=params)
+        superjob_vacancy_parse(params=params)
 
-    current_page = page_obj.number
+        """Re-query after new vacancies have been fetched and stored."""
+        vacancies = query_vacancies(search_query)
+        paginator = Paginator(vacancies, VACANCIES_PER_PAGE)
+        page_obj = paginator.get_page(page_number)
 
     pagination = {
         "current_page": page_obj.number,
@@ -91,11 +102,13 @@ def vacancy(request):
 
 def custom_server_error(request):
     return JsonResponse(
-        {"status": "error", "message": "Internal server error"}, status=500
+        {"status": "error", "message": "Internal server error"},
+        status=500,
     )
 
 
 def custom_not_found_error(request, exception):
     return JsonResponse(
-        {"status": "error", "message": "Internal server error"}, status=404
+        {"status": "error", "message": "Internal server error"},
+        status=404,
     )

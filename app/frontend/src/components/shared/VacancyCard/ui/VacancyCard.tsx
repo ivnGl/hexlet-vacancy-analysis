@@ -1,9 +1,8 @@
-import React from "react";
-import type { VacancyCardProps } from "../../../../types";
-import { Card, Group, Text, Badge, Button, Stack, Box } from '@mantine/core';
-import { Building2, MapPin, ChevronDown, ChevronUp, Send } from "lucide-react";
-import { useState } from "react";
 import { router } from "@inertiajs/core";
+import { Badge, Box, Button, Card, Group, Stack, Text } from '@mantine/core';
+import { Building2, ChevronDown, ChevronUp, MapPin, Send } from "lucide-react";
+import React, { useState } from "react";
+import type { VacancyCardProps } from "../../../../types";
 
 interface VacancyCardPropsWrapper {
   props: VacancyCardProps;
@@ -15,12 +14,14 @@ export const VacancyCard: React.FC<VacancyCardPropsWrapper> = ({ props }) => {
 
   const [skillsExpanded, setSkillsExpanded] = useState(false);
 
-  const skillsCutDesktop = skills ? skills.slice(0, 12) : [];
+  const skills_array: string[] = skills ? skills.split(',') : []
 
-  const remainingSkillsCount = skills ? skills.length - 3 : 0;
-  const hasMoreSkills = skills ? skills.length > 3 : false;
+  const skillsCutDesktop = skills_array ? skills_array.slice(0, 12) : [];
 
-  const displayedSkills = skillsExpanded ? (skills || []) : (skills ? skills.slice(0, 3) : []);
+  const remainingSkillsCount = skills_array ? skills_array.length - 3 : 0;
+  const hasMoreSkills = skills_array ? skills_array.length > 3 : false;
+
+  const displayedSkills = skillsExpanded ? (skills_array || []) : (skills_array ? skills_array.slice(0, 3) : []);
 
   const handleCardLink = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -72,7 +73,7 @@ export const VacancyCard: React.FC<VacancyCardPropsWrapper> = ({ props }) => {
 
             {/* Навыки */}
             <Group wrap="wrap" gap="xs">
-              {skills && skills.length > 0 ? (
+              {skills_array && skills_array.length > 0 ? (
                 skillsCutDesktop.map((skill) => (
                   <Badge
                     key={skill}
@@ -122,14 +123,14 @@ export const VacancyCard: React.FC<VacancyCardPropsWrapper> = ({ props }) => {
           {company ?
           <Group gap={5}>
             <Building2 size={16} />
-              <Text size="md">{company.name}</Text>
+              <Text size="md">{company}</Text>
           </Group> :
           <Text fw={700} size="md" c="#0d2e4e">Название компании не указано</Text>
           }
           {city ?
           <Group gap={5}>
             <MapPin size={16} />
-            <Text>{city.name}</Text>
+            <Text>{city}</Text>
           </Group> :
           <Text fw={700} size="md" c="#0d2e4e">Город не указан</Text>
           }
@@ -147,7 +148,7 @@ export const VacancyCard: React.FC<VacancyCardPropsWrapper> = ({ props }) => {
         {/* Навыки */}
          <Stack gap="xs">
           <Group wrap="wrap" gap="xs" style={{ alignItems: 'center' }}>
-            {skills && skills.length > 0 ? (
+            {skills_array && skills_array.length > 0 ? (
               <>
                 {displayedSkills.map((skill) => (
                   <Badge

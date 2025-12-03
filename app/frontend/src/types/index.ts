@@ -12,13 +12,7 @@ export interface VacancyCardProps {
   salary: string;
   experience?: string;
   employment?: string;
-  company?: {
-    id: number;
-    name: string;
-  };
-  city?: {
-    id: number;
-    name: string;
-  };
-  skills: string[];
+  company?: string;
+  city?: string;
+  skills?: string;
 }

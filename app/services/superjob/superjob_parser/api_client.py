@@ -1,8 +1,8 @@
 """API client for SuperJob API."""
+
 import os
 from typing import Any, Dict, List
 
-import requests
 from dotenv import load_dotenv
 
 from ...hh.hh_parser.api_client import APIClient
@@ -17,21 +17,13 @@ class SuperJobAPIClient(APIClient):
     """API client for SuperJob platform."""
 
     def __init__(self, timeout: int = REQUEST_TIMEOUT):
-        secret_key = os.getenv("SJ_KEY")
+        secret_key = os.getenv("SUPERJOB_KEY")
         if not secret_key:
-            raise ValueError("SJ_KEY environment variable is not set")
+            raise ValueError("SUPERJOB_KEY environment variable is not set")
         headers = {"X-Api-App-Id": secret_key}
         super().__init__(BASE_URL, headers, timeout)
 
-    def fetch_vacancies(
-        self, keyword: str, town: str = "Moscow", count: int = 4
-    ) -> List[Dict[str, Any]]:
-
-        params = {
-            "keyword": keyword,
-            "town": town,
-            "count": count,
-        }
+    def fetch_vacancies(self, params: Dict[str, Any]) -> List[Dict[str, Any]]:
         data = self.get(self.base_url, params)
+        print(data)
         return data.get("objects", [])
-

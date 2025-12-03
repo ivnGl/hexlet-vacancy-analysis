@@ -1,24 +1,36 @@
 """Views for SuperJob parser."""
+
 from app.services.common.view_helpers import process_vacancy_view
 
 from .api_client import SuperJobAPIClient
 from .data_transformer import SuperJobDataTransformer
-from .vacancy_service import SuperJobVacancyService
+from .vacancy_service import VacancyService
 
 
-def superjob_list(request):
+def superjob_vacancy_parse(params: dict | None = None):
     """Fetch and persist vacancies from SuperJob API."""
-    keyword = "Python"
-    town = "Moscow"
-    count = 4
+
+    if params is None:
+        params = {
+            "keyword": "",
+            "town": "Moscow",
+            "count": 1,
+            "page": 0,
+        }
+    else:
+        params = {
+            "keyword": params["text"],
+            "town": "Moscow",
+            "count": params["per_page"],
+            "page": params["page"],
+        }
 
     def service_factory():
         api_client = SuperJobAPIClient()
         transformer = SuperJobDataTransformer()
-        return SuperJobVacancyService(api_client, transformer)
+        return VacancyService(api_client, transformer)
 
     return process_vacancy_view(
-        request,
         service_factory=service_factory,
-        service_params={"keyword": keyword, "town": town, "count": count},
+        service_params=params,
     )

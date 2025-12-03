@@ -6,16 +6,13 @@ from .models import Vacancy
 
 
 def process_vacancies(
-    query: str,
-    area: int = 1,
-    per_page: int = 4,
-    *,
+    params: Dict[str, Any],
     fetch_ids_func: Callable[[str, int, int], List[str]],
     fetch_detail_func: Callable[[str], Dict[str, Any]],
     transformer_func: Callable[[Dict[str, Any]], Dict[str, Any]],
 ) -> Tuple[int, List[str]]:
     try:
-        vacancy_ids = fetch_ids_func(query, area, per_page)
+        vacancy_ids = fetch_ids_func(params)
     except Exception as e:
         raise ValueError(f"Ошибка при получении списка вакансий: {e}") from e
 

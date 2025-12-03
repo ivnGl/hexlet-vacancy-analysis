@@ -1,6 +1,6 @@
 """Data transformer for converting HH API responses to model data."""
 
-from typing import Any, Dict, Optional, Tuple, TypedDict
+from typing import Any, Dict, Optional, Tuple
 
 from bs4 import BeautifulSoup
 
@@ -9,9 +9,9 @@ from .models import City, Company, Platform
 
 class DataTransformer:
     @staticmethod
-    def _format_salary(salary_data: dict[str, any] | None) -> str:
+    def _format_salary(salary_data: Optional[Dict[str, Any]]) -> str:
         if not salary_data:
-            return ""
+            return "По договоренности"
 
         parts = []
         if salary_data.get("from"):

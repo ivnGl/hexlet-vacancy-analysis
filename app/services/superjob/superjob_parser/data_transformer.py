@@ -40,7 +40,7 @@ class SuperJobDataTransformer(DataTransformer):
                 item, "place_of_work", "title"
             ),
             "skills": SuperJobDataTransformer._format_skills(
-                item.get("candidat")
+                item.get("catalogues")
             ),
             "education": SuperJobDataTransformer._safe_nested_get(
                 item, "education", "title"
@@ -83,7 +83,7 @@ class SuperJobDataTransformer(DataTransformer):
             return None
         if isinstance(skills_data, str):
             return skills_data
-        return str(skills_data)
+        return skills_data[0]["title"]
 
     @staticmethod
     def _parse_published_at(timestamp: Optional[int]) -> Optional[datetime]:

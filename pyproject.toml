@@ -32,4 +32,4 @@ dev = [
 
 [tool.pylint.main]
   source-roots = "app/services"
-  
+

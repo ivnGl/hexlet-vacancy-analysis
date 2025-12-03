@@ -1,17 +1,18 @@
 """API client for HeadHunter API."""
 
 import time
+from typing import Any, Dict, List
 
 import requests
 
 
 class APIClient:
-    def __init__(self, base_url: str, headers: dict[str, str], timeout: int):
+    def __init__(self, base_url: str, headers: Dict[str, str], timeout: int):
         self.base_url = base_url
         self.headers = headers
         self.timeout = timeout
 
-    def get(self, url: str, params: dict[str, any] = None) -> any:
+    def get(self, url: str, params: Dict[str, Any] = None) -> Any:
         response = requests.get(
             url, params=params, headers=self.headers, timeout=self.timeout
         )
@@ -32,11 +33,16 @@ class HHAPIClient(APIClient):
         super().__init__(BASE_URL, HEADERS, timeout)
         self.delay = delay
 
-    def fetch_vacancies(self, params: dict[str, any]) -> list[str]:
+    def fetch_vacancies(
+        self, params: Dict[str, Any] = None
+    ) -> List[Dict[str, Any]]:
         data = self.get(self.base_url, params)
-        return [item["id"] for item in data.get("items", [])]
+        return [
+            self.fetch_vacancy_detail(item["id"])
+            for item in data.get("items", [])
+        ]
 
-    def fetch_vacancy_detail(self, vacancy_id: str) -> dict[str, any]:
+    def fetch_vacancy_detail(self, vacancy_id: str) -> Dict[str, Any]:
         time.sleep(self.delay)
         detail_url = f"{self.base_url}/{vacancy_id}"
         return self.get(detail_url)
