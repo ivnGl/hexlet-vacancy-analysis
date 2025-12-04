@@ -1,10 +1,11 @@
 """Shared helpers for vacancy views."""
+
 from typing import Any, Callable, Dict
 
 from django.http import JsonResponse
 
 
-def process_vacancy_view(
+async def process_vacancy_view(
     service_factory: Callable[[], Any],
     service_params: Dict[str, Any],
 ) -> JsonResponse:
@@ -12,7 +13,7 @@ def process_vacancy_view(
     service = service_factory()
 
     try:
-        saved_count, errors = service.process_vacancies(service_params)
+        saved_count, errors = await service.process_vacancies(service_params)
         return JsonResponse(
             {
                 "status": "success",
@@ -33,5 +34,3 @@ def process_vacancy_view(
             {"status": "error", "message": f"Ошибка при парсинге: {str(exc)}"},
             status=500,
         )
-
-

@@ -23,7 +23,6 @@ class SuperJobAPIClient(APIClient):
         headers = {"X-Api-App-Id": secret_key}
         super().__init__(BASE_URL, headers, timeout)
 
-    def fetch_vacancies(self, params: Dict[str, Any]) -> List[Dict[str, Any]]:
-        data = self.get(self.base_url, params)
-        print(data)
+    async def fetch_vacancies(self, params: Dict[str, Any]) -> List[Dict[str, Any]]:
+        data = await self.get(self.base_url, params)
         return data.get("objects", [])

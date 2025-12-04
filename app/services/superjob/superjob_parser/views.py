@@ -7,7 +7,7 @@ from .data_transformer import SuperJobDataTransformer
 from .vacancy_service import VacancyService
 
 
-def superjob_vacancy_parse(params: dict | None = None):
+async def superjob_vacancy_parse(params: dict | None = None):
     """Fetch and persist vacancies from SuperJob API."""
 
     if params is None:
@@ -30,7 +30,7 @@ def superjob_vacancy_parse(params: dict | None = None):
         transformer = SuperJobDataTransformer()
         return VacancyService(api_client, transformer)
 
-    return process_vacancy_view(
+    return await process_vacancy_view(
         service_factory=service_factory,
         service_params=params,
     )

@@ -1,9 +1,10 @@
 """API client for HeadHunter API."""
 
+import asyncio
 import time
 from typing import Any, Dict, List
 
-import requests
+import aiohttp
 
 
 class APIClient:
@@ -12,12 +13,15 @@ class APIClient:
         self.headers = headers
         self.timeout = timeout
 
-    def get(self, url: str, params: Dict[str, Any] = None) -> Any:
-        response = requests.get(
-            url, params=params, headers=self.headers, timeout=self.timeout
-        )
-        response.raise_for_status()
-        return response.json()
+    async def get(self, url: str, params: Dict[str, Any] = None) -> Any:
+        async with aiohttp.ClientSession() as session:
+            print(f"Reg{url} start")
+            await asyncio.sleep(2)
+            async with session.get(
+                url, params=params, headers=self.headers, timeout=self.timeout
+            ) as response:
+                response.raise_for_status()
+                return await response.json()
 
 
 BASE_URL = "https://api.hh.ru/vacancies"
@@ -33,16 +37,15 @@ class HHAPIClient(APIClient):
         super().__init__(BASE_URL, HEADERS, timeout)
         self.delay = delay
 
-    def fetch_vacancies(
+    async def fetch_vacancies(
         self, params: Dict[str, Any] = None
     ) -> List[Dict[str, Any]]:
-        data = self.get(self.base_url, params)
-        return [
-            self.fetch_vacancy_detail(item["id"])
-            for item in data.get("items", [])
-        ]
+        data = await self.get(self.base_url, params)
+        items = data.get("items", [])
 
-    def fetch_vacancy_detail(self, vacancy_id: str) -> Dict[str, Any]:
-        time.sleep(self.delay)
+        tasks = [self.fetch_vacancy_detail(item["id"]) for item in items]
+        return await asyncio.gather(*tasks)
+
+    async def fetch_vacancy_detail(self, vacancy_id: str) -> Dict[str, Any]:
         detail_url = f"{self.base_url}/{vacancy_id}"
-        return self.get(detail_url)
+        return await self.get(detail_url)

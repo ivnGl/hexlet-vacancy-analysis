@@ -2,9 +2,12 @@
 
 from typing import Any, Callable, Dict, List, Tuple
 
+from asgiref.sync import sync_to_async
+
 from .models import Vacancy
 
 
+@sync_to_async
 def process_vacancies(
     params: Dict[str, Any],
     fetch_ids_func: Callable[[str, int, int], List[str]],

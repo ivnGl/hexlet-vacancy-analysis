@@ -1,12 +1,12 @@
+from asgiref.sync import sync_to_async
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import JsonResponse
 from inertia import render as inertia_render
 
-from app.services.superjob.superjob_parser.views import superjob_vacancy_parse
-
 from .services.hh.hh_parser.models import Vacancy
 from .services.hh.hh_parser.views import hh_vacancy_parse
+from .services.superjob.superjob_parser.views import superjob_vacancy_parse
 
 VACANCIES_PER_PAGE = 2
 HH_AREA_DEFAULT = 1
@@ -18,6 +18,7 @@ def index(request):
     return inertia_render(request, "HomePage", props={})
 
 
+@sync_to_async
 def query_vacancies(search_query: str = "") -> list[dict[str, str]]:
     """Return serialized vacancies filtered by optional search query."""
     qs = Vacancy.objects.select_related("company", "city")
@@ -54,16 +55,16 @@ async def refetch():
     pass
 
 
-def vacancy(request):
+async def vacancy(request):
     """Render paginated vacancy list with optional search filtering."""
     page_number = int(request.GET.get("page", 1))
     search_query = request.GET.get("search", "").strip()
 
-    vacancies = query_vacancies(search_query)
+    vacancies = await query_vacancies(search_query)
     paginator = Paginator(vacancies, VACANCIES_PER_PAGE)
     page_obj = paginator.get_page(page_number)
 
-    """Auto-fetch additional vacancies from HH when user reaches the last page."""
+    # Auto-fetch additional vacancies from HH when user reaches last page
     if page_obj.number == paginator.num_pages:
         params = {
             "text": search_query,
@@ -72,11 +73,11 @@ def vacancy(request):
             "page": page_obj.number - 1,
         }
 
-        hh_vacancy_parse(params=params)
-        superjob_vacancy_parse(params=params)
+        await hh_vacancy_parse(params=params)
+        await superjob_vacancy_parse(params=params)
 
-        """Re-query after new vacancies have been fetched and stored."""
-        vacancies = query_vacancies(search_query)
+        # Re-query after new vacancies have been fetched and stored
+        vacancies = await query_vacancies(search_query)
         paginator = Paginator(vacancies, VACANCIES_PER_PAGE)
         page_obj = paginator.get_page(page_number)
 
