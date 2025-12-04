@@ -19,14 +19,12 @@ class VacancyService:
     async def process_vacancies(
         self, params: dict[str, any]
     ) -> Tuple[int, List[str]]:
-
         vacancies_data = await self.api_client.fetch_vacancies(params)
 
         saved_count = 0
         errors: List[str] = []
 
         for item in vacancies_data:
-
             try:
                 await self.save_vacancy(item)
 
@@ -46,4 +44,3 @@ class VacancyService:
             platform_vacancy_id=transformed_data["platform_vacancy_id"],
             defaults=transformed_data,
         )
-

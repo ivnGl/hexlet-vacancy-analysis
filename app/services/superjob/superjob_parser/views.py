@@ -10,21 +10,6 @@ from .vacancy_service import VacancyService
 async def superjob_vacancy_parse(params: dict | None = None):
     """Fetch and persist vacancies from SuperJob API."""
 
-    if params is None:
-        params = {
-            "keyword": "",
-            "town": "Moscow",
-            "count": 1,
-            "page": 0,
-        }
-    else:
-        params = {
-            "keyword": params["text"],
-            "town": "Moscow",
-            "count": params["per_page"],
-            "page": params["page"],
-        }
-
     def service_factory():
         api_client = SuperJobAPIClient()
         transformer = SuperJobDataTransformer()
