@@ -27,7 +27,9 @@ class APIClient(APIClientInterface):
         url = f"{self.base_url}/{endpoint}"
         timeout = aiohttp.ClientTimeout(total=self.timeout)
         connector = aiohttp.TCPConnector(limit_per_host=10)
-        async with aiohttp.ClientSession(timeout=timeout, connector=connector) as session:
+        async with aiohttp.ClientSession(
+            timeout=timeout, connector=connector
+        ) as session:
             async with session.get(
                 url, params=params, headers=self.headers
             ) as response:

@@ -21,6 +21,7 @@ dependencies = [
     "gunicorn>=23.0.0",
     "pre-commit>=4.3.0",
     "aiolimiter>=1.2.1",
+    "aiohttp>=3.13.2",
 ]
 
 [dependency-groups]
