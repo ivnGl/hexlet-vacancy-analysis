@@ -1,14 +1,14 @@
 """Data transformer for converting HH API responses to model data."""
 
-from typing import Any, Dict, Optional, Tuple
+from typing import Optional
 
+from asgiref.sync import async_to_sync, sync_to_async
 from bs4 import BeautifulSoup
 
-from asgiref.sync import sync_to_async, async_to_sync
 from .models import City, Company, Platform
 
 
-def format_salary(salary_data: Optional[Dict[str, Any]]) -> str:
+def format_salary(salary_data: Optional[dict[str, any]]) -> str:
     if not salary_data:
         return "По договоренности"
 
@@ -33,7 +33,7 @@ def extract_plain_text(html_content: Optional[str]) -> str:
     return BeautifulSoup(html_content, "html.parser").get_text()
 
 
-def safe_nested_get(data: Optional[Dict[str, Any]], *keys: str) -> Any:
+def safe_nested_get(data: Optional[dict[str, any]], *keys: str) -> any:
     if not data:
         return None
 
@@ -48,7 +48,7 @@ def safe_nested_get(data: Optional[Dict[str, Any]], *keys: str) -> Any:
     return current
 
 
-def transform_hh_data(item: Dict[str, Any]) -> Dict[str, Any]:
+def transform_hh_data(item: dict[str, any]) -> dict[str, any]:
     platform, _ = Platform.objects.get_or_create(name=Platform.HH)
     company = extract_company(item)
     city, full_address = extract_city_and_address(item.get("address"))
@@ -74,7 +74,7 @@ def transform_hh_data(item: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def extract_company(item: Dict[str, Any]) -> Optional[Company]:
+def extract_company(item: dict[str, any]) -> Optional[Company]:
     employer_name = item.get("employer", {}).get("name")
     if not employer_name:
         return None
@@ -83,8 +83,8 @@ def extract_company(item: Dict[str, Any]) -> Optional[Company]:
 
 
 def extract_city_and_address(
-    address: Optional[Dict[str, Any]],
-) -> Tuple[Optional[City], Optional[str]]:
+    address: Optional[dict[str, any]],
+) -> tuple[Optional[City], Optional[str]]:
     if not address:
         return None, None
 

@@ -1,7 +1,5 @@
 """Service for managing SuperJob vacancy operations."""
 
-from typing import List, Tuple
-
 from asgiref.sync import sync_to_async
 
 from ...hh.hh_parser.models import Vacancy
@@ -9,11 +7,11 @@ from ...hh.hh_parser.models import Vacancy
 
 async def process_vacancies(
     fetch_vacancies, transform_data, params: dict[str, any]
-) -> Tuple[int, List[str]]:
+) -> tuple[int, list[str]]:
     vacancies_data = await fetch_vacancies(params)
 
     saved_count = 0
-    errors: List[str] = []
+    errors: list[str] = []
 
     for item in vacancies_data:
         try:
@@ -29,7 +27,6 @@ async def process_vacancies(
 
 @sync_to_async
 def save_vacancy(transform_data, item):
-
     transformed_data = transform_data(item)
 
     print(transformed_data["platform_vacancy_id"])

@@ -15,11 +15,19 @@ class VacancyAdmin(admin.ModelAdmin):
         "platform__name",
         "published_at",
     )
-    search_fields = ("title", "company__name", "city__name", "platform__name", "skills")
+    search_fields = (
+        "title",
+        "company__name",
+        "city__name",
+        "platform__name",
+        "skills",
+    )
     list_filter = (
         (
             "platform",
-            custom_title_filter_factory(admin.RelatedFieldListFilter, "Platform"),
+            custom_title_filter_factory(
+                admin.RelatedFieldListFilter, "Platform"
+            ),
         ),
         "city",
         "experience",

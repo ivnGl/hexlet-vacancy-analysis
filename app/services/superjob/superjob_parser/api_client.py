@@ -1,7 +1,6 @@
 """API client for SuperJob API."""
 
 import os
-from typing import Any, Dict, List
 
 from dotenv import load_dotenv
 

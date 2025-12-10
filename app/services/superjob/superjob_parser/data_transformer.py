@@ -1,8 +1,9 @@
 """Data transformer for converting SuperJob API responses to model data."""
 
 from datetime import datetime
-from typing import Any, Dict, Optional
+
 from django.utils.timezone import make_aware
+from typing import Optional
 
 from ...hh.hh_parser.data_transformer import (
     extract_plain_text,
@@ -12,7 +13,7 @@ from ...hh.hh_parser.data_transformer import (
 from ...hh.hh_parser.models import City, Company, Platform
 
 
-def transform_superjob_data(item: Dict[str, Any]) -> Dict[str, Any]:
+def transform_superjob_data(item: dict[str, any]) -> dict[str, any]:
     platform, _ = Platform.objects.get_or_create(name=Platform.SUPER_JOB)
     company = extract_company(item)
     city = extract_city(item.get("town"))
@@ -44,7 +45,7 @@ def transform_superjob_data(item: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def extract_company(item: Dict[str, Any]) -> Optional[Company]:
+def extract_company(item: dict[str, any]) -> Optional[Company]:
     company_data = item.get("client", {})
     company_name = company_data.get("title")
     if not company_name:
@@ -53,7 +54,7 @@ def extract_company(item: Dict[str, Any]) -> Optional[Company]:
     return company
 
 
-def extract_city(town_data: Optional[Dict[str, Any]]) -> Optional[City]:
+def extract_city(town_data: Optional[dict[str, any]]) -> Optional[City]:
     if not town_data:
         return None
     city_name = town_data.get("title")
@@ -63,7 +64,7 @@ def extract_city(town_data: Optional[Dict[str, Any]]) -> Optional[City]:
     return city
 
 
-def format_skills(skills_data: Optional[Any]) -> Optional[str]:
+def format_skills(skills_data: Optional[any]) -> Optional[str]:
     if not skills_data:
         return None
     if isinstance(skills_data, str):

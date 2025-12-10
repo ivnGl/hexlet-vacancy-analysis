@@ -1,4 +1,5 @@
 """Models for vacancy management system."""
+
 from django.db import models
 from django.core.validators import MinLengthValidator
 
@@ -35,7 +36,6 @@ class Platform(models.Model):
 
 
 class Company(models.Model):
-
     name = models.CharField(
         max_length=150,
         db_index=True,
@@ -53,7 +53,6 @@ class Company(models.Model):
 
 
 class City(models.Model):
-
     name = models.CharField(
         max_length=50,
         db_index=True,
@@ -71,7 +70,6 @@ class City(models.Model):
 
 
 class Vacancy(models.Model):
-
     platform = models.ForeignKey(
         Platform,
         related_name="vacancies",
@@ -197,7 +195,9 @@ class Vacancy(models.Model):
             models.UniqueConstraint(
                 fields=["platform_vacancy_id"],
                 name="unique_platform_vacancy_id",
-                condition=models.Q(platform__isnull=False, platform_vacancy_id__isnull=False),
+                condition=models.Q(
+                    platform__isnull=False, platform_vacancy_id__isnull=False
+                ),
             ),
         ]
 

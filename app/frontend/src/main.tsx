@@ -1,10 +1,10 @@
-import { createRoot } from "react-dom/client";
-import { createInertiaApp } from "@inertiajs/react";
 import { InertiaProgress } from '@inertiajs/progress';
+import { createInertiaApp } from "@inertiajs/react";
 import { MantineProvider } from "@mantine/core";
 import '@mantine/core/styles.css';
 import axios from 'axios';
 import React from 'react';
+import { createRoot } from "react-dom/client";
 
 document.addEventListener('DOMContentLoaded', () => {
     const csrfMeta = document.querySelector('meta[name=csrf-token]');

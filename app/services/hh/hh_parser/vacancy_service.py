@@ -1,24 +1,21 @@
-from typing import Any, Callable, Dict, List, Tuple
-
 from asgiref.sync import sync_to_async
 
 from .models import Vacancy
 
 
-#@sync_to_async
 async def process_vacancies(
-    params: Dict[str, Any],
-    fetch_ids_func: Callable[[str, int, int], List[str]],
-    fetch_detail_func: Callable[[str], Dict[str, Any]],
-    transformer_func: Callable[[Dict[str, Any]], Dict[str, Any]],
-) -> Tuple[int, List[str]]:
+    params: dict[str, any],
+    fetch_ids_func: callable[[str, int, int], list[str]],
+    fetch_detail_func: callable[[str], dict[str, any]],
+    transformer_func: callable[[dict[str, any]], dict[str, any]],
+) -> tuple[int, list[str]]:
     try:
         vacancy_ids = fetch_ids_func(params)
     except Exception as e:
         raise ValueError(f"Ошибка при получении списка вакансий: {e}") from e
 
     saved_count = 0
-    errors: List[str] = []
+    errors: list[str] = []
 
     for vacancy_id in vacancy_ids:
         try:

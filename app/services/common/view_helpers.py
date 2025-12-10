@@ -1,13 +1,11 @@
 """Shared helpers for vacancy views."""
 
-from typing import Any, Callable, Dict
-
 from django.http import JsonResponse
 
 
 async def process_vacancy_view(
-    service_factory: Callable[[], Any],
-    service_params: Dict[str, Any],
+    service_factory: callable[[], any],
+    service_params: dict[str, any],
 ) -> JsonResponse:
     """Process a vacancy view request with shared error handling."""
     service = service_factory()
