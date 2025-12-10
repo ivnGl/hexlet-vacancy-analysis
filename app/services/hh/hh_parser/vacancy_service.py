@@ -1,5 +1,3 @@
-"""Service for managing vacancy operations."""
-
 from typing import Any, Callable, Dict, List, Tuple
 
 from asgiref.sync import sync_to_async
@@ -7,8 +5,8 @@ from asgiref.sync import sync_to_async
 from .models import Vacancy
 
 
-@sync_to_async
-def process_vacancies(
+#@sync_to_async
+async def process_vacancies(
     params: Dict[str, Any],
     fetch_ids_func: Callable[[str, int, int], List[str]],
     fetch_detail_func: Callable[[str], Dict[str, Any]],
@@ -27,7 +25,7 @@ def process_vacancies(
             vacancy_data = fetch_detail_func(vacancy_id)
             transformed_data = transformer_func(vacancy_data)
 
-            Vacancy.objects.update_or_create(
+            await sync_to_async(Vacancy.objects.update_or_create)(
                 platform_vacancy_id=transformed_data["platform_vacancy_id"],
                 defaults=transformed_data,
             )

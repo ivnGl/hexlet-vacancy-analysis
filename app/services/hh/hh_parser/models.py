@@ -35,7 +35,6 @@ class Platform(models.Model):
 
 
 class Company(models.Model):
-    """Company model representing employers."""
 
     name = models.CharField(
         max_length=150,
@@ -50,12 +49,10 @@ class Company(models.Model):
         ordering = ["name"]
 
     def __str__(self) -> str:
-        """Return string representation of company."""
         return self.name
 
 
 class City(models.Model):
-    """City model representing job locations."""
 
     name = models.CharField(
         max_length=50,
@@ -70,12 +67,10 @@ class City(models.Model):
         ordering = ["name"]
 
     def __str__(self) -> str:
-        """Return string representation of city."""
         return self.name
 
 
 class Vacancy(models.Model):
-    """Vacancy model representing job postings from various platforms."""
 
     platform = models.ForeignKey(
         Platform,
@@ -200,13 +195,12 @@ class Vacancy(models.Model):
         ]
         constraints = [
             models.UniqueConstraint(
-                fields=["platform", "platform_vacancy_id"],
+                fields=["platform_vacancy_id"],
                 name="unique_platform_vacancy_id",
                 condition=models.Q(platform__isnull=False, platform_vacancy_id__isnull=False),
             ),
         ]
 
     def __str__(self) -> str:
-        """Return string representation of vacancy."""
         company_name = self.company.name if self.company else "Неизвестная компания"
         return f"{self.title} в {company_name}"

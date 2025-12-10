@@ -9,20 +9,19 @@ from ...hh.hh_parser.api_client import APIClient
 
 load_dotenv()
 
-BASE_URL = "https://api.superjob.ru/2.0/vacancies"
+
 REQUEST_TIMEOUT = 10
 
 
-class SuperJobAPIClient(APIClient):
+async def fetch_superjob_vacancies(params):
     """API client for SuperJob platform."""
 
-    def __init__(self, timeout: int = REQUEST_TIMEOUT):
-        secret_key = os.getenv("SUPERJOB_KEY")
-        if not secret_key:
-            raise ValueError("SUPERJOB_KEY environment variable is not set")
-        headers = {"X-Api-App-Id": secret_key}
-        super().__init__(BASE_URL, headers, timeout)
+    secret_key = os.getenv("SUPERJOB_KEY")
+    if not secret_key:
+        raise ValueError("SUPERJOB_KEY environment variable is not set")
+    base_url = "https://api.superjob.ru/2.0/vacancies"
+    headers = {"X-Api-App-Id": secret_key}
+    api_client = APIClient(base_url, headers)
 
-    async def fetch_vacancies(self, params: Dict[str, Any]) -> List[Dict[str, Any]]:
-        data = await self.get(self.base_url, params)
-        return data.get("objects", [])
+    data = await api_client.get(params=params)
+    return data.get("objects", [])

@@ -20,6 +20,7 @@ dependencies = [
     "whitenoise>=6.11.0",
     "gunicorn>=23.0.0",
     "pre-commit>=4.3.0",
+    "aiolimiter>=1.2.1",
 ]
 
 [dependency-groups]

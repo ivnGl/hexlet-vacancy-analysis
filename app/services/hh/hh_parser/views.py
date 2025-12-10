@@ -1,21 +1,11 @@
-"""Views for HH parser."""
-
-from app.services.common.view_helpers import process_vacancy_view
-
-from ...superjob.superjob_parser.vacancy_service import VacancyService
-from .api_client import HHAPIClient
-from .data_transformer import HHDataTransformer
+from ...superjob.superjob_parser.vacancy_service import process_vacancies
+from .api_client import fetch_hh_vacancies
+from .data_transformer import transform_hh_data
 
 
 async def hh_vacancy_parse(params: dict | None = None):
     """Fetch and persist vacancies from HH API."""
-
-    def service_factory():
-        api_client = HHAPIClient()
-        transformer = HHDataTransformer()
-        return VacancyService(api_client, transformer)
-
-    return await process_vacancy_view(
-        service_factory=service_factory,
-        service_params=params,
+    print('hh')
+    return await process_vacancies(
+        fetch_hh_vacancies, transform_hh_data, params=params
     )
