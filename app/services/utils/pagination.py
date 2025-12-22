@@ -1,15 +1,18 @@
 import asyncio
+import logging
 
 from asgiref.sync import sync_to_async
 from django.core.paginator import Paginator
 from django.db.models import Q
 
-from ..hh.hh_parser.models import Vacancy
-from ..hh.hh_parser.views import hh_vacancy_parse
-from ..superjob.superjob_parser.views import superjob_vacancy_parse
+from app.services.hh.hh_parser.models import Vacancy
+from app.services.hh.hh_parser.views import hh_vacancy_parse
+from app.services.superjob.superjob_parser.views import superjob_vacancy_parse
 
 VACANCIES_PER_PAGE = 2
 HH_AREA_DEFAULT = 1
+
+logger = logging.getLogger(__name__)
 
 
 @sync_to_async
@@ -25,6 +28,7 @@ def get_search_vacancies(search_query: str = "") -> list[dict[str, str]]:
 
     return [
         {
+            "id": v.platform_vacancy_id,
             "platform": v.platform.name if v.platform else "",
             "title": v.title,
             "salary": v.salary,
@@ -45,7 +49,7 @@ def get_search_vacancies(search_query: str = "") -> list[dict[str, str]]:
     ]
 
 
-async def get_pagination(request):
+async def get_pagination_vacancies(request):
     page_number = int(request.GET.get("page", 1))
     search_query = request.GET.get("search", "").strip()
 
@@ -65,13 +69,14 @@ async def get_pagination(request):
             "count": VACANCIES_PER_PAGE,
             "page": page_obj.number - 1,
         }
-
-        await asyncio.gather(
-            hh_vacancy_parse(params=hh_params),
-            superjob_vacancy_parse(params=superjob_params),
-        )
-
-        return await get_pagination(request)
+        try:
+            await asyncio.gather(
+                hh_vacancy_parse(params=hh_params),
+                superjob_vacancy_parse(params=superjob_params),
+            )
+            return await get_pagination_vacancies(request)
+        except Exception as e:
+            logger.error(f"Fetch error: {e.message}")
 
     return {
         "pagination": {

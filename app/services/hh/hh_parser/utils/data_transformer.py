@@ -1,11 +1,8 @@
-"""Data transformer for converting HH API responses to model data."""
-
 from typing import Optional
 
-from asgiref.sync import async_to_sync, sync_to_async
 from bs4 import BeautifulSoup
 
-from .models import City, Company, Platform
+from ..models import City, Company, Platform
 
 
 def format_salary(salary_data: Optional[dict[str, any]]) -> str:

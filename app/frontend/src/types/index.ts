@@ -6,7 +6,7 @@ export interface User {
 }
 
 export interface VacancyCardProps {
-  id: number;
+  id: string;
   title: string;
   url?: string;
   salary: string;
@@ -15,4 +15,5 @@ export interface VacancyCardProps {
   company?: string;
   city?: string;
   skills?: string;
+  address?: string;
 }

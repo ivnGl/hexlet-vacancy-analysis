@@ -1,8 +1,9 @@
 import { router } from '@inertiajs/react';
-import { Flex, Pagination, TextInput } from '@mantine/core';
+import { Pagination, TextInput } from '@mantine/core';
 import type { ChangeEvent } from 'react';
 import { useCallback, useEffect, useState } from 'react';
 
+import { useDebounce } from '../../hooks/useDebounce';
 import type { VacancyCardProps } from '../../types';
 import { VacancyCard } from '../shared/VacancyCard';
 
@@ -23,33 +24,18 @@ type QueryState = {
 const DEFAULT_QUERY: QueryState = { search: '' };
 const QUERY_DELAY: number = 2000
 
-function useDebounce(value: QueryState, delay: number) {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-}
 
 function VacancyPage({ vacancies, pagination }: VacancyPageProps) {
   const [query, setQuery] = useState<QueryState>(DEFAULT_QUERY);
   const debouncedQuery = useDebounce(query, QUERY_DELAY)
 
-console.log(vacancies)
   const handlePageChange = useCallback(
     (pageNumber: number) => {
       router.get('', { ...debouncedQuery, page: pageNumber }, { preserveState: true, replace: true });
     },
     [debouncedQuery],
   );
+
 
   const handleSearch = (event: ChangeEvent<HTMLInputElement>) => {
     setQuery((prev) => ({ ...prev, search: event.target.value }));
@@ -75,11 +61,10 @@ console.log(vacancies)
         value={query.search}
       />
 
-        <Flex direction="column" gap="md">
-          {vacancies.map((vacancy) => (
-            <VacancyCard key={vacancy.id} props={vacancy} />
-          ))}
-        </Flex>
+
+      {vacancies.map((vacancy) => (
+        <VacancyCard key={vacancy.id} props={vacancy} />
+      ))}
 
 
       <Pagination

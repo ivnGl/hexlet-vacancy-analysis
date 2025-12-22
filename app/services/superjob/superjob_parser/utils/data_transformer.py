@@ -1,16 +1,14 @@
-"""Data transformer for converting SuperJob API responses to model data."""
-
 from datetime import datetime
-
-from django.utils.timezone import make_aware
 from typing import Optional
 
-from ...hh.hh_parser.data_transformer import (
+from django.utils.timezone import make_aware
+
+from app.services.hh.hh_parser.models import City, Company, Platform
+from app.services.hh.hh_parser.utils.data_transformer import (
     extract_plain_text,
     format_salary,
     safe_nested_get,
 )
-from ...hh.hh_parser.models import City, Company, Platform
 
 
 def transform_superjob_data(item: dict[str, any]) -> dict[str, any]:
