@@ -1,4 +1,5 @@
 from asgiref.sync import sync_to_async
+from django.http import JsonResponse
 
 from app.services.hh.hh_parser.models import Vacancy
 
@@ -11,7 +12,10 @@ async def process_vacancies(
     try:
         vacancies_data = await fetch_vacancies(params)
     except Exception as e:
-        raise ValueError(f"Ошибка при получении списка вакансий: {e}") from e
+        return JsonResponse(
+            {"status": "error", "message": f"Ошибка при парсинге: {str(e)}"},
+            status=500,
+        )
 
     for item in vacancies_data:
         try:
@@ -20,11 +24,14 @@ async def process_vacancies(
         except Exception as e:
             errors.append(f"Вакансия не была сохранена: {str(e)}")
             continue
-    return {
-        "saved_vacancies": saved_count,
-        "errors": errors,
-        "vacancies": vacancies_data,
-    }
+    return JsonResponse(
+        {
+            "status": "success",
+            "vacancies": vacancies_data,
+            "message": f"Успешно сохранено {saved_count} вакансий",
+        },
+        status=200,
+    )
 
 
 @sync_to_async
