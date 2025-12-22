@@ -5,6 +5,8 @@ from abc import ABC, abstractmethod
 
 import aiohttp
 
+REQUEST_TIMEOUT = 10
+
 
 class HTTPClientInterface(ABC):
     @abstractmethod
@@ -14,7 +16,10 @@ class HTTPClientInterface(ABC):
 
 class HTTPClient(HTTPClientInterface):
     def __init__(
-        self, base_url: str, headers: dict[str, str], timeout: int = 10
+        self,
+        base_url: str,
+        headers: dict[str, str],
+        timeout: int = REQUEST_TIMEOUT,
     ):
         self.base_url = base_url
         self.headers = headers
@@ -25,7 +30,7 @@ class HTTPClient(HTTPClientInterface):
     ) -> any:
         url = f"{self.base_url}/{endpoint}" if endpoint else f"{self.base_url}"
         timeout = aiohttp.ClientTimeout(total=self.timeout)
-        connector = aiohttp.TCPConnector(limit_per_host=10)
+        connector = aiohttp.TCPConnector(limit_per_host=1, limit=10)
         async with aiohttp.ClientSession(
             timeout=timeout, connector=connector
         ) as session:
@@ -45,7 +50,9 @@ async def fetch_hh_vacancies(params):
         return await api_client.get(endpoint=vacancy_id)
 
     data = await api_client.get(params=params)
-    items = data.get("items", [])
+    if not data.get("items"):
+        raise ValueError("No data found")
+    items = data.get("items")
     tasks = []
     for item in items:
         tasks.append(asyncio.create_task(fetch_vacancy_detail(item["id"])))

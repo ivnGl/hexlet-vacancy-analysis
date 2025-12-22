@@ -10,6 +10,7 @@ from app.services.hh.hh_parser.views import hh_vacancy_parse
 from app.services.superjob.superjob_parser.views import superjob_vacancy_parse
 
 VACANCIES_PER_PAGE = 2
+PLATFORM_VACANCIES_QTY = VACANCIES_PER_PAGE * 2
 HH_AREA_DEFAULT = 1
 
 logger = logging.getLogger(__name__)
@@ -60,23 +61,25 @@ async def get_pagination_vacancies(request):
     if page_obj.number == paginator.num_pages:
         hh_params = {
             "text": search_query,
-            "per_page": VACANCIES_PER_PAGE,
+            "per_page": PLATFORM_VACANCIES_QTY,
             "page": page_obj.number - 1,
             "order_by": "publication_time",
         }
         superjob_params = {
             "keyword": search_query,
-            "count": VACANCIES_PER_PAGE,
+            "count": PLATFORM_VACANCIES_QTY,
             "page": page_obj.number - 1,
         }
-        try:
-            await asyncio.gather(
-                hh_vacancy_parse(params=hh_params),
-                superjob_vacancy_parse(params=superjob_params),
-            )
-            return await get_pagination_vacancies(request)
-        except Exception as e:
-            logger.error(f"Fetch error: {e.message}")
+
+        responses = await asyncio.gather(
+            hh_vacancy_parse(params=hh_params),
+            #superjob_vacancy_parse(params=superjob_params),
+        )
+
+        for response in responses:
+            if response.status_code == 200:
+                return await get_pagination_vacancies(request)
+        logger.error(f"Fetch error, status code: {response.status_code}")
 
     return {
         "pagination": {

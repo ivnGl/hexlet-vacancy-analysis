@@ -9,9 +9,6 @@ from app.services.hh.hh_parser.utils.api_client import HTTPClient
 load_dotenv()
 
 
-REQUEST_TIMEOUT = 10
-
-
 async def fetch_superjob_vacancies(params):
     secret_key = os.getenv("SUPERJOB_KEY")
     if not secret_key:
@@ -21,4 +18,6 @@ async def fetch_superjob_vacancies(params):
     api_client = HTTPClient(base_url, headers)
 
     data = await api_client.get(params=params)
-    return data.get("objects", [])
+    if not data.get("objects"):
+        raise ValueError("No data found")
+    return data.get("objects")
