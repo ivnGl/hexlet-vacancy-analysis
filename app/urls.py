@@ -30,6 +30,7 @@ urlpatterns = [
     path("auth/", include("app.services.auth.users.urls")),
     path("account/", include("app.services.account.urls")),
     path("reset-password", redirect_mail_link, name="link_in_mail"),
+    path("foragencies/", include("app.services.foragencies.urls")),
 ]
 
 handler500 = views.custom_server_error

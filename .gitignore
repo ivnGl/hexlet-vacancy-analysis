@@ -24,3 +24,5 @@ error.html
 **/node_modules/
 staticfiles/
 static/
+*.session
+.mypy_cache
