@@ -1,4 +1,5 @@
 import logging
+from typing import Sequence
 
 from celery import shared_task
 from django.core.mail import send_mail
@@ -22,60 +23,15 @@ def send_mail_task(
     message: str,
     html_message: str,
     from_email: str,
-    recipient_list: list = None,
+    recipient_list: Sequence[str],
     fail_silently: bool = False,
-):
+) -> None:
     """
-    Асинхронная задача для отправки электронного письма с автоматической повторной
-    попыткой.
+    Асинхронная отправка email через Celery с автоматическими повторами.
 
-    Использует Celery для фоновой обработки и настроенную логику перезапуска при ошибках.
-    Поддерживает HTML-форматирование сообщений и позволяет указывать адрес отправителя.
-
-    Parameters:
-    ----------
-    self : Task
-        Ссылка на текущую задачу Celery (автоматически передается).
-    subject : str
-        Тема письма.
-    message : str
-        Текст письма в plain text формате.
-    html_message : str
-        Текст письма в HTML-формате (опционально).
-    from_email : str
-        Адрес отправителя.
-    recipient_list : list, optional
-        Список адресов получателей. По умолчанию None.
-    fail_silently : bool, optional
-        Если True, ошибки будут логироваться, но не прерывать выполнение.
-        По умолчанию False.
-
-    Returns:
-    -------
-    None
-
-    Raises:
-    ------
-    Exception
-        Если `fail_silently=False` и отправка письма не удалась после всех попыток.
-
-    Notes:
-    -----
-    - Задача поддерживает автоматическую повторную отправку (`autoretry`) при
-    возникновении исключений.
-    - Максимальное количество попыток определяется значением `configs.MAX_RETRIES`.
-    - При каждой неудачной попытке записывается лог с уровнем WARNING.
-    - Логирование успешной отправки выполняется на уровне INFO.
-    - Для работы требуется корректная настройка email-бэкенда Django (EMAIL_* параметры).
-
-    Examples:
-    -------
-    >>> send_mail_task.delay(
-    ...     subject="Сброс пароля",
-    ...     message="Инструкции по сбросу пароля...",
-    ...     html_message="<p>Инструкции по <strong>сбросу пароля</strong></p>",
-    ...     recipient_list=["user@example.com"],
-    ... )
+    Использует настройки Django EMAIL_* и конфиг `configs.MAX_RETRIES`
+    для повторных попыток.
+    Поддерживает plain text и HTML версии письма.
     """
     current_retry = self.request.retries
     max_retries = self.max_retries
