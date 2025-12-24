@@ -31,8 +31,6 @@ class HTTPClient(HTTPClientInterface):
         async with aiohttp.ClientSession(
             timeout=timeout, connector=connector
         ) as session:
-            async with session.get(
-                url, params=params, headers=self.headers
-            ) as response:
+            async with session.get(url, params=params, headers=self.headers) as response:
                 response.raise_for_status()
                 return await response.json()

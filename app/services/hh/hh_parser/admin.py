@@ -26,9 +26,7 @@ class VacancyAdmin(admin.ModelAdmin):
     list_filter = (
         (
             "platform",
-            custom_title_filter_factory(
-                admin.RelatedFieldListFilter, "Platform"
-            ),
+            custom_title_filter_factory(admin.RelatedFieldListFilter, "Platform"),
         ),
         "city",
         "experience",
