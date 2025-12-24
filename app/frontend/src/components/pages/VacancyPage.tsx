@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { Pagination, TextInput } from '@mantine/core';
+import { Box, Container, Pagination, TextInput } from '@mantine/core';
 import type { ChangeEvent } from 'react';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -36,7 +36,6 @@ function VacancyPage({ vacancies, pagination }: VacancyPageProps) {
     [debouncedQuery],
   );
 
-
   const handleSearch = (event: ChangeEvent<HTMLInputElement>) => {
     setQuery((prev) => ({ ...prev, search: event.target.value }));
   };
@@ -48,24 +47,24 @@ function VacancyPage({ vacancies, pagination }: VacancyPageProps) {
     });
   }, [debouncedQuery]);
 
-  if(!vacancies) return "Loading..."
+  if (!vacancies) return "Loading..."
 
   return (
-    <>
-      <TextInput
-        radius="xl"
-        size="md"
-        placeholder="Search vacancies"
-        rightSectionWidth={42}
-        onChange={handleSearch}
-        value={query.search}
-      />
-
+    <Container>
+      <Box mb={20} mt="xs">
+        <TextInput
+          radius="xl"
+          size="md"
+          placeholder="Search vacancies"
+          rightSectionWidth={42}
+          onChange={handleSearch}
+          value={query.search}
+        />
+      </Box>
 
       {vacancies.map((vacancy) => (
         <VacancyCard key={vacancy.id} props={vacancy} />
       ))}
-
 
       <Pagination
         total={pagination.total_pages}
@@ -73,7 +72,8 @@ function VacancyPage({ vacancies, pagination }: VacancyPageProps) {
         onChange={handlePageChange}
         mt="sm"
       />
-    </>
+
+    </Container>
   );
 }
 

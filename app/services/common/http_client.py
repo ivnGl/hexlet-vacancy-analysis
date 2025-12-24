@@ -1,6 +1,3 @@
-"""API client for HeadHunter API."""
-
-import asyncio
 from abc import ABC, abstractmethod
 
 import aiohttp
@@ -39,22 +36,3 @@ class HTTPClient(HTTPClientInterface):
             ) as response:
                 response.raise_for_status()
                 return await response.json()
-
-
-async def fetch_hh_vacancies(params):
-    base_url = "https://api.hh.ru/vacancies"
-    headers = {"User-Agent": "HH-User-Agent"}
-    api_client = HTTPClient(base_url, headers)
-
-    async def fetch_vacancy_detail(vacancy_id: str) -> dict[str, any]:
-        return await api_client.get(endpoint=vacancy_id)
-
-    data = await api_client.get(params=params)
-    if not data.get("items"):
-        raise ValueError("No data found")
-    items = data.get("items")
-    tasks = []
-    for item in items:
-        tasks.append(asyncio.create_task(fetch_vacancy_detail(item["id"])))
-
-    return await asyncio.gather(*tasks)

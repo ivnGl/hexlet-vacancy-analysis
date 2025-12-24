@@ -1,12 +1,12 @@
-"""API client for SuperJob API."""
-
+import logging
 import os
 
 from dotenv import load_dotenv
 
-from app.services.hh.hh_parser.utils.api_client import HTTPClient
+from app.services.common.http_client import HTTPClient
 
 load_dotenv()
+logger = logging.getLogger(__name__)
 
 
 async def fetch_superjob_vacancies(params):
@@ -19,5 +19,6 @@ async def fetch_superjob_vacancies(params):
 
     data = await api_client.get(params=params)
     if not data.get("objects"):
-        raise ValueError("No data found")
+        logger.warning("No vacancy found in superjob api")
+        raise ValueError("No vacancy found in superjob api")
     return data.get("objects")

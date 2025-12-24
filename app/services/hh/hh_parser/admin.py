@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from app.services.utils.custom_filter import custom_title_filter_factory
+from app.services.common.custom_title import custom_title_filter_factory
 
 from .models import Vacancy
 

@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from inertia import render as inertia_render
 
-from .services.utils.pagination import get_pagination_vacancies
+from .utils.pagination_vacancies import get_pagination_vacancies
 
 
 def index(request):

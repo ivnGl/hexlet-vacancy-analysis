@@ -9,7 +9,7 @@ from app.services.hh.hh_parser.models import Vacancy
 from app.services.hh.hh_parser.views import hh_vacancy_parse
 from app.services.superjob.superjob_parser.views import superjob_vacancy_parse
 
-VACANCIES_PER_PAGE = 2
+VACANCIES_PER_PAGE = 5
 PLATFORM_VACANCIES_QTY = VACANCIES_PER_PAGE * 2
 HH_AREA_DEFAULT = 1
 
@@ -73,7 +73,7 @@ async def get_pagination_vacancies(request):
 
         responses = await asyncio.gather(
             hh_vacancy_parse(params=hh_params),
-            #superjob_vacancy_parse(params=superjob_params),
+            superjob_vacancy_parse(params=superjob_params),
         )
 
         for response in responses:
