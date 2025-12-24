@@ -221,8 +221,8 @@ CSRF_COOKIE_NAME = "XSRF-TOKEN"
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "")
 
 # Celery settings
-CELERY_BROKER_URL = "redis://localhost:6379"
-CELERY_RESULT_BACKEND = "redis://localhost:6379"
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379")
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://localhost:6379")
 
 # Tinkoff ID settings
 TINKOFF_ID_CLIENT_ID = os.getenv("TINKOFF_ID_CLIENT_ID", "")
