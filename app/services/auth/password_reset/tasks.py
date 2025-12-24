@@ -1,15 +1,15 @@
 import logging
 from typing import Sequence
 
-from celery import shared_task
 from django.core.mail import send_mail
 
+from app.celery import app
 from app.services.auth.password_reset import configs
 
 logger = logging.getLogger(__name__)
 
 
-@shared_task(
+@app.task(
     bind=True,
     max_retries=configs.MAX_RETRIES,
     default_retry_delay=60,

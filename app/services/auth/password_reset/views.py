@@ -1,23 +1,27 @@
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta
+from typing import Any
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.core.exceptions import ValidationError
+from django.db import transaction
+from django.http import HttpRequest
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.html import strip_tags
 from django.views import View
-from django_ratelimit.decorators import ratelimit
-from inertia import location
+from django_ratelimit.decorators import ratelimit  # type: ignore
+from inertia import InertiaResponse, location  # type: ignore
 from inertia import render as inertia_render
 
 from . import configs
 from .models import PasswordResetToken
 from .tasks import send_mail_task
-from .validators import is_valid_password
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -37,9 +41,9 @@ class PasswordResetView(View):
     subject_template_name = "Password reset"  # Шаблон темы письма
     email_template_name = "password_reset_email.html"  # Шаблон тела письма
     from_email = settings.DEFAULT_FROM_EMAIL  # Email-адрес отправителя
-    token_generator = PasswordResetTokenGenerator  # Генератор токенов
+    token_generator = PasswordResetTokenGenerator()  # Генератор токенов
 
-    def get(self, request):
+    def get(self, request: HttpRequest) -> InertiaResponse:
         """
         Обрабатывает GET-запрос для отображения страницы сброса пароля.
 
@@ -60,7 +64,7 @@ class PasswordResetView(View):
     @method_decorator(ratelimit(key="ip", rate="3/h"))
     # Лимит по email: 3 запроса в час
     @method_decorator(ratelimit(key="post:email", rate="3/h"))
-    def post(self, request):
+    def post(self, request: HttpRequest) -> InertiaResponse:
         """
         Обрабатывает POST-запрос для инициации сброса пароля.
 
@@ -77,7 +81,7 @@ class PasswordResetView(View):
         Returns:
             HttpResponse: Ответ с результатом операции или ошибкой.
         """
-        was_limited = getattr(request, "limited", False)
+        was_limited: Any | bool = getattr(request, "limited", False)
         logger.info(f"Limit reached: [{was_limited}]")
 
         if was_limited:
@@ -90,7 +94,7 @@ class PasswordResetView(View):
                 },
             )
 
-        email = request.POST.get("email")
+        email: str | None = request.POST.get("email")
         if not email:
             return inertia_render(
                 request,
@@ -105,31 +109,32 @@ class PasswordResetView(View):
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
-            logger.error(f"['{email}']: email does not belong to any user")
+            logger.error("email does not belong to any user")
             user = None
 
         if user:
-            # Удаление старых токенов пользователя
-            PasswordResetToken.mark_all_as_used(user)
+            with transaction.atomic():
+                # Удаление старых токенов пользователя
+                PasswordResetToken.mark_all_as_used(user)
 
-            # Генерация нового токена и расчет времени истечения
-            token_hash = self.token_generator().make_token(user)
-            current_time = timezone.now()
-            time_out = timedelta(configs.PASSWORD_RESET_TIMEOUT)
-            expires_at = current_time + time_out
+                # Генерация нового токена и расчет времени истечения
+                token: str = self.token_generator.make_token(user)
+                current_time: datetime = timezone.now()
+                time_out: timedelta = timedelta(configs.PASSWORD_RESET_TIMEOUT)
+                expires_at: datetime = current_time + time_out
 
-            # Формирование ссылки для сброса пароля
-            reset_url = request.build_absolute_uri(
-                reverse("link_in_mail") + f"?token={token_hash}"
-            )
+                # Формирование ссылки для сброса пароля
+                reset_url: str = request.build_absolute_uri(
+                    reverse("password_reset_redirect") + f"?token={token}"
+                )
 
-            # Отправка email и сохранение токена
-            self.send_reset_email(email, reset_url)
-            PasswordResetToken.objects.create(
-                user_id=user,
-                token_hash=token_hash,
-                expires_at=expires_at,
-            )
+                # Отправка email и сохранение токена
+                self.send_reset_email(email, reset_url)
+                PasswordResetToken.objects.create(
+                    user_id=user,
+                    token_hash=hash(token),
+                    expires_at=expires_at,
+                )
 
         return inertia_render(
             request,
@@ -137,7 +142,7 @@ class PasswordResetView(View):
             props={"status": "ok", "status_code": 200},
         )
 
-    def send_reset_email(self, email, reset_url):
+    def send_reset_email(self, email: str, reset_url: str) -> None:
         """
         Отправляет email с ссылкой для сброса пароля.
 
@@ -145,15 +150,15 @@ class PasswordResetView(View):
             email (str): Адрес электронной почты получателя.
             reset_url (str): Ссылка для сброса пароля.
         """
-        subject = self.subject_template_name
-        html_message = render_to_string(
+        subject: str = self.subject_template_name
+        html_message: str = render_to_string(
             self.email_template_name,
             {
                 "email": email,
                 "reset_url": reset_url,
             },
         )
-        plain_message = strip_tags(html_message)
+        plain_message: str = strip_tags(html_message)
 
         send_mail_task.delay(
             subject=subject,
@@ -165,7 +170,7 @@ class PasswordResetView(View):
         )
 
 
-def redirect_mail_link(request):
+def redirect_mail_link(request: HttpRequest) -> InertiaResponse:
     """
     Обрабатывает запрос на перенаправление к странице подтверждения сброса
     пароля.
@@ -173,7 +178,7 @@ def redirect_mail_link(request):
     Извлекает токен из GET-параметров запроса, формирует URL для страницы
     подтверждения и выполняет редирект на этот адрес.
 
-    Args:
+    Args:Task
         request (HttpRequest): Объект HTTP-запроса,
                                содержащий GET-параметр 'token'.
 
@@ -181,8 +186,17 @@ def redirect_mail_link(request):
         HttpResponseRedirect: Перенаправление на страницу подтверждения сброса
                     пароля с переданным токеном в качестве параметра запроса.
     """
-    token = request.GET.get("token")
-    url = reverse("password_reset_confirm") + f"?token={token}"
+    token: str | None = request.GET.get("token")
+    if not token:
+        return inertia_render(
+            request,
+            "ErrorPage",
+            props={
+                "status": "Bad Request",
+                "status_code": 400,
+            },
+        )
+    url: str = reverse("password_reset_confirm") + f"?token={token}"
     return location(url)
 
 
@@ -197,7 +211,7 @@ class PasswordResetConfirmView(View):
     - Валидацию нового пароля перед сохранением.
     """
 
-    def get(self, request):
+    def get(self, request: HttpRequest) -> InertiaResponse:
         """
         Обрабатывает GET-запрос для проверки действительности токена.
 
@@ -212,10 +226,10 @@ class PasswordResetConfirmView(View):
                 - Если токен недействителен или истёк: страница ошибки с
                   кодом 400.
         """
-        token = request.GET.get("token")
+        token: str | None = request.GET.get("token")
         # Поиск неиспользованного токена по хэшу
         reset_token = PasswordResetToken.objects.filter(
-            token_hash=token, is_used=False
+            token_hash=hash(token), is_used=False
         ).first()
 
         if reset_token:
@@ -231,7 +245,7 @@ class PasswordResetConfirmView(View):
                     },
                 )
 
-        logger.error(f"['{token}']: token is expired or invalid")
+        logger.error("Token is expired or invalid")
         return inertia_render(
             request,
             "ErrorPage",
@@ -242,7 +256,7 @@ class PasswordResetConfirmView(View):
             },
         )
 
-    def post(self, request):
+    def post(self, request: HttpRequest) -> InertiaResponse:
         """
         Обрабатывает POST-запрос для сброса пароля.
 
@@ -257,11 +271,23 @@ class PasswordResetConfirmView(View):
                 - При ошибках: страница подтверждения с ошибкой 422 или
                   страница ошибки с кодом 400.
         """
-        token = request.POST.get("token")
-        new_password = request.POST.get("newPassword")
+        token: str | None = request.POST.get("token")
+        new_password: str | None = request.POST.get("newPassword")
+
+        if not token or not new_password:
+            return inertia_render(
+                request,
+                "ErrorPage",
+                props={
+                    "status": "Bad Request",
+                    "status_code": 400,
+                },
+            )
 
         # Валидация сложности пароля
-        if not is_valid_password(new_password):
+        try:
+            validate_password(new_password)
+        except ValidationError:
             return inertia_render(
                 request,
                 "PasswordResetConfirmPage",
@@ -274,7 +300,7 @@ class PasswordResetConfirmView(View):
             )
 
         # Поиск активного токена
-        reset_token = PasswordResetToken.objects.filter(
+        reset_token: PasswordResetToken | None = PasswordResetToken.objects.filter(
             token_hash=token, is_used=False
         ).first()
 
