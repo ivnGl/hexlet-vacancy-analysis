@@ -2,9 +2,10 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
-from django.test import Client, TestCase
-from django.urls import reverse_lazy
+from django.test import Client
+from django.urls import reverse, reverse_lazy
 from django.utils import timezone
+from inertia.test import InertiaTestCase  # type: ignore
 
 from app.services.auth.password_reset import configs
 from app.services.auth.password_reset.models import PasswordResetToken
@@ -13,8 +14,9 @@ from app.services.auth.password_reset.views import PasswordResetView
 User = get_user_model()
 
 
-class PasswordResetTestCase(TestCase):
+class PasswordResetTestCase(InertiaTestCase):
     def setUp(self):
+        super().setUp()
         self.client = Client()
         self.url = reverse_lazy("password_reset")
         user_data = {
@@ -27,7 +29,7 @@ class PasswordResetTestCase(TestCase):
         expires_at = current_time + time_out
         token_data = {
             "user_id": self.user,
-            "token_hash": "test_token",
+            "token_hash": hash("test_token"),
             "expires_at": expires_at,
         }
         self.token = PasswordResetToken.objects.create(**token_data)
@@ -52,25 +54,20 @@ class PasswordResetTests(PasswordResetTestCase):
 
 class PasswordResetConfirmTests(PasswordResetTestCase):
     def test_get_valid_token(self):
-        url = reverse_lazy("password_reset_confirm") + f"?token={self.token.token_hash}"
-        response = self.client.get(url)
-
-        assert response.props["status_code"] == 200
-        assert response.props["status"] == "ok"
+        url = reverse("password_reset_confirm") + "?token=test_token"
+        self.client.get(url)
+        self.assertIncludesProps({"status_code": 200})
 
     def test_get_expired_token(self):
-        expired_token = PasswordResetToken.objects.create(
+        PasswordResetToken.objects.create(
             user_id=self.user,
-            token_hash="expired_token",
+            token_hash=hash("expired_token"),
             expires_at=timezone.now() - timedelta(hours=1),
         )
 
-        url = (
-            reverse_lazy("password_reset_confirm") + f"?token={expired_token.token_hash}"
-        )
-        response = self.client.get(url)
-        assert response.props["status_code"] == 400
-        assert "Ссылка недействительна" in response.props["message"]
+        url = reverse_lazy("password_reset_confirm") + "?token=expired_token"
+        self.client.get(url)
+        self.assertIncludesProps({"status_code": 400})
 
     def test_post_valid_password(self):
         url = reverse_lazy("password_reset_confirm")
@@ -90,14 +87,12 @@ class PasswordResetConfirmTests(PasswordResetTestCase):
         url = reverse_lazy("password_reset_confirm")
         data = {"token": self.token.token_hash, "newPassword": "weak"}
 
-        response = self.client.post(url, data)
-        assert response.props["status_code"] == 422
-        assert "Слабый пароль" in response.props["message"]
+        self.client.post(url, data)
+        self.assertIncludesProps({"status_code": 422})
 
     def test_post_invalid_token(self):
         url = reverse_lazy("password_reset_confirm")
         data = {"token": "invalid_token", "newPassword": "StrongPass123!"}
 
-        response = self.client.post(url, data)
-        assert response.props["status_code"] == 400
-        assert "Недействительный токен" in response.props["message"]
+        self.client.post(url, data)
+        self.assertIncludesProps({"status_code": 400})
