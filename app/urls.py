@@ -29,7 +29,7 @@ urlpatterns = [
     path("telegram/", include("app.services.telegram.telegram_channels.urls")),
     path("auth/", include("app.services.auth.users.urls")),
     path("account/", include("app.services.account.urls")),
-    path("reset-password", redirect_mail_link, name="link_in_mail"),
+    path("reset-password/", redirect_mail_link, name="password_reset_redirect"),
     path("foragencies/", include("app.services.foragencies.urls")),
 ]
 

@@ -4,12 +4,12 @@ from . import views
 
 urlpatterns = [
     path(
-        "forgot",
+        "forgot/",
         views.PasswordResetView.as_view(),
         name="password_reset",
     ),
     path(
-        "reset",
+        "reset/",
         views.PasswordResetConfirmView.as_view(),
         name="password_reset_confirm",
     ),
