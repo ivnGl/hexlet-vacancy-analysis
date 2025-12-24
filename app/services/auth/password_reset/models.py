@@ -4,8 +4,8 @@ from app.services.auth.users.models import User
 
 
 class PasswordResetToken(models.Model):
-    user_id = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
-    token_hash = models.CharField(255, null=True)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    token_hash = models.CharField(null=True)
     expires_at = models.DateTimeField()
     is_used = models.BooleanField(default=False)
 
