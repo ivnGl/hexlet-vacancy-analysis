@@ -226,3 +226,9 @@ TINKOFF_ID_TOKEN_URL = "https://id.tinkoff.ru/auth/token"
 TINKOFF_ID_USERINFO_URL = "https://id.tinkoff.ru/userinfo/userinfo"
 TINKOFF_ID_INTROSPECT_URL = "https://id.tinkoff.ru/auth/introspect"
 TINKOFF_ID_SCOPE = ["profile", "email"]
+
+# AI settings
+AI_API_KEY = os.getenv("AI_API_KEY", "")
+AI_MAX_HISTORY_LENGTH = 10
+AI_API_TIMEOUT = 10
+AI_MODEL = "nex-agi/deepseek-v3.1-nex-n1:free"
