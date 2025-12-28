@@ -15,7 +15,24 @@ logger = logging.getLogger(__name__)
 
 
 class AIAssistantView(View):
+    """
+    Представление для AI-ассистента с поддержкой аутентифицированных
+    и анонимных пользователей.
+    Обрабатывает отображение страницы и обмен сообщениями с AI через OpenRouter API.
+    """
+
     def get(self, request: HttpRequest) -> InertiaResponse:
+        """
+        Отображает страницу ассистента.
+
+        Возвращает страницу AIAssistantPage с историей сообщений пользователя.
+
+        Args:
+            request (HttpRequest): Объект запроса
+
+        Returns:
+            InertiaResponse: Страница с пропсами сообщений
+        """
         messages: List[dict[str, str]] = self.get_messages(request)
         return inertia_render(
             request,
@@ -26,6 +43,18 @@ class AIAssistantView(View):
         )
 
     def post(self, request: HttpRequest) -> InertiaResponse:
+        """
+        Обрабатывает новое сообщение от пользователя.
+
+        Отправляет сообщение в AI, сохраняет историю и возвращает ответ.
+        Поддерживает аутентифицированных и анонимных пользователей.
+
+        Args:
+            request (HttpRequest): Запрос с сообщением
+
+        Returns:
+            JsonResponse: Ответ AI или ошибка с соответствующим статусом
+        """
         message = request.POST.get("message")
         if message is None:
             return JsonResponse({"error": "Message is required"}, status=400)
@@ -37,7 +66,7 @@ class AIAssistantView(View):
         )
 
         try:
-            responce = chat.send_message(message)
+            response = chat.send_message(message)
         except TimeoutError:
             logger.error("Превышено время обращения к openAI")
             return JsonResponse({"error": "Request timed out"}, status=504)
@@ -72,16 +101,27 @@ class AIAssistantView(View):
                 )
         except Exception as e:
             logger.error(f"Ошибка при обновлении или сохранении: {str(e)}")
-            JsonResponse({"error": str(e)}, status=500)
+            return JsonResponse({"error": str(e)}, status=500)
 
         if created:
             logger.info(f"Создана новая запись: {obj.pk}")
         else:
             logger.info(f"Обновлена существующая запись: {obj.pk}")
 
-        return JsonResponse({"message": responce}, status=200)
+        return JsonResponse({"message": response}, status=200)
 
     def get_messages(self, request: HttpRequest) -> List[dict[str, str]]:
+        """
+        Получает историю сообщений пользователя.
+
+        Для аутентифицированных - по пользователю, для анонимных - по хешу cookie.
+
+        Args:
+            request (HttpRequest): Объект запроса
+
+        Returns:
+            List[dict]: История сообщений или пустой список
+        """
         if request.user.is_authenticated:
             return ChatMessage.objects.filter(user=request.user)[0].messages
         else:
