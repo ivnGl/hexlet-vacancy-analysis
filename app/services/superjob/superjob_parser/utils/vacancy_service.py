@@ -1,5 +1,4 @@
 from asgiref.sync import sync_to_async
-from django.http import JsonResponse
 
 from app.services.vacancies.models import Vacancy
 
@@ -9,13 +8,7 @@ async def process_vacancies(
 ) -> tuple[int, list[str]]:
     saved_count = 0
     errors: list[str] = []
-    try:
-        vacancies_data = await fetch_vacancies(params)
-    except Exception as e:
-        return JsonResponse(
-            {"status": "error", "message": f"Ошибка при парсинге: {str(e)}"},
-            status=500,
-        )
+    vacancies_data = await fetch_vacancies(params)
 
     for item in vacancies_data:
         try:
@@ -24,14 +17,11 @@ async def process_vacancies(
         except Exception as e:
             errors.append(f"Вакансия не была сохранена: {str(e)}")
             continue
-    return JsonResponse(
-        {
-            "status": "success",
-            "vacancies": vacancies_data,
-            "message": f"Успешно сохранено {saved_count} вакансий",
-        },
-        status=200,
-    )
+    return {
+        "saved_vacancies": saved_count,
+        "errors": errors,
+        "vacancies": vacancies_data,
+    }
 
 
 @sync_to_async
