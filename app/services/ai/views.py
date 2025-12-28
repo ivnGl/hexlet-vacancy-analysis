@@ -41,7 +41,8 @@ class AIAssistantView(View):
         except TimeoutError:
             logger.error("Превышено время обращения к openAI")
             return JsonResponse({"error": "Request timed out"}, status=504)
-        except OpenAIError:
+        except OpenAIError as e:
+            logger.error(str(e))
             return JsonResponse({"error": "OpenAI error"}, status=500)
         except Exception as e:
             logger.error(f"Ошибка при запросе к openAI: {str(e)}")

@@ -1,12 +1,10 @@
-import logging
 from typing import List
 
-import requests  # type: ignore
+import requests
 from django.conf import settings
+from requests.exceptions import Timeout
 
 from .exceptions import OpenAIError
-
-logger = logging.getLogger(__name__)
 
 
 class OpenRouterChat:
@@ -28,24 +26,28 @@ class OpenRouterChat:
     def send_message(self, message: str, timeout: int = settings.AI_API_TIMEOUT) -> str:
         self.messages.append({"role": "user", "content": message})
 
-        response = requests.post(
-            "https://openrouter.ai/api/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json",
-            },
-            json={
-                "model": self.model,
-                "messages": self.messages[-self.max_history_lenght * 2 :],
-            },
-            timeout=timeout,
-        )
+        try:
+            response = requests.post(
+                "https://openrouter.ai/api/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": self.model,
+                    "messages": self.messages[-self.max_history_lenght * 2 :],
+                },
+                timeout=timeout,
+            )
+        except Timeout as e:
+            raise TimeoutError(e)
 
         data = response.json()
 
         if response.status_code != 200:
-            logger.error(f"{data['error']['message']}, code: {response.status_code}")
-            raise OpenAIError()
+            raise OpenAIError(
+                f"{data['error']['message']}, code: {response.status_code}"
+            )
 
         assistant_message = data["choices"][0]["message"]["content"]
 
