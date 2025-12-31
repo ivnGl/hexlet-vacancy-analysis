@@ -18,12 +18,12 @@ class Platform(models.Model):
         choices=PLATFORM_NAME_CHOICES,
         unique=True,
         db_index=True,
-        help_text="Name of the job search platform",
+        verbose_name="Платформа",
     )
 
     class Meta:
-        verbose_name = "Platform"
-        verbose_name_plural = "Platforms"
+        verbose_name = "Платформа"
+        verbose_name_plural = "Платформы"
         ordering = ["name"]
 
     def __str__(self) -> str:
@@ -34,13 +34,13 @@ class Company(models.Model):
     name = models.CharField(
         max_length=150,
         db_index=True,
-        help_text="Company name",
         validators=[MinLengthValidator(1)],
+        verbose_name="Компания"
     )
 
     class Meta:
-        verbose_name = "Company"
-        verbose_name_plural = "Companies"
+        verbose_name = "Компания"
+        verbose_name_plural = "Компании"
         ordering = ["name"]
 
     def __str__(self) -> str:
@@ -51,13 +51,13 @@ class City(models.Model):
     name = models.CharField(
         max_length=50,
         db_index=True,
-        help_text="City name",
         validators=[MinLengthValidator(1)],
+        verbose_name="Город",
     )
 
     class Meta:
-        verbose_name = "City"
-        verbose_name_plural = "Cities"
+        verbose_name = "Город"
+        verbose_name_plural = "Города"
         ordering = ["name"]
 
     def __str__(self) -> str:
@@ -72,7 +72,7 @@ class Vacancy(models.Model):
         null=True,
         blank=True,
         db_index=True,
-        help_text="Platform where the vacancy was posted",
+        verbose_name="Платформа",
     )
     company = models.ForeignKey(
         Company,
@@ -81,7 +81,7 @@ class Vacancy(models.Model):
         null=True,
         blank=True,
         db_index=True,
-        help_text="Company offering the position",
+        verbose_name="Компания",
     )
     city = models.ForeignKey(
         City,
@@ -90,97 +90,97 @@ class Vacancy(models.Model):
         null=True,
         blank=True,
         db_index=True,
-        help_text="City where the position is located",
+        verbose_name="Город",
     )
     platform_vacancy_id = models.CharField(
         max_length=25,
         null=True,
         blank=True,
         db_index=True,
-        help_text="Unique identifier from the source platform",
+        verbose_name="Идентификатор вакансии на платформе",
     )
     title = models.CharField(
         max_length=255,
         db_index=True,
-        help_text="Job title",
         validators=[MinLengthValidator(1)],
+        verbose_name="Заголовок",
     )
     url = models.URLField(
         unique=True,
         blank=True,
         null=True,
-        help_text="URL to the original vacancy posting",
+        verbose_name="Cсылка",
     )
     salary = models.CharField(
         max_length=120,
         blank=True,
         null=True,
-        help_text="Salary information",
+        verbose_name="Зарплата",
     )
     experience = models.CharField(
         max_length=50,
         blank=True,
         null=True,
-        help_text="Required experience level",
+        verbose_name="Опыт работы",
     )
     employment = models.CharField(
         max_length=40,
         blank=True,
         null=True,
-        help_text="Employment type (full-time, part-time, etc.)",
+        verbose_name="Занятость",
     )
     work_format = models.CharField(
         max_length=255,
         blank=True,
         null=True,
-        help_text="Work format (remote, office, hybrid, etc.)",
+        verbose_name="Формат работы",
     )
     schedule = models.CharField(
         max_length=50,
         blank=True,
         null=True,
-        help_text="Work schedule",
+        verbose_name="Расписание",
     )
     address = models.CharField(
         max_length=255,
         blank=True,
         null=True,
-        help_text="Physical address of the workplace",
+        verbose_name="Адрес",
     )
     skills = models.TextField(
         blank=True,
         null=True,
-        help_text="Required skills and qualifications",
+        verbose_name="Навыки",
     )
     description = models.TextField(
         blank=True,
         null=True,
-        help_text="Detailed job description",
+        verbose_name="Описание",
     )
     education = models.CharField(
         max_length=30,
         blank=True,
         null=True,
-        help_text="Required education level",
+        verbose_name="Образование",
     )
     contacts = models.CharField(
         max_length=250,
         blank=True,
         null=True,
-        help_text="Contact information",
+        verbose_name="Контакты",
     )
     created_at = models.DateTimeField(
         auto_now_add=True,
-        help_text="When the vacancy was added to the system",
+        verbose_name="Создано",
     )
     published_at = models.DateTimeField(
         db_index=True,
-        help_text="When the vacancy was published on the source platform",
+        verbose_name="Опубликовано",
     )
 
     class Meta:
-        verbose_name = "Vacancy"
-        verbose_name_plural = "Vacancies"
+        verbose_name = "Вакансия"
+        verbose_name_plural = "Вакансии"
         ordering = ["-published_at"]
         indexes = [
             models.Index(fields=["-published_at", "platform"]),

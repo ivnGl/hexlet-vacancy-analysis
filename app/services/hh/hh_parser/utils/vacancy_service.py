@@ -11,6 +11,11 @@ async def process_vacancies(
     errors: list[str] = []
     try:
         vacancies_data = await fetch_vacancies(params)
+    except ValueError as e:
+        return JsonResponse(
+            {"status": "error", "message": f"Vacancies not found: {str(e)}"},
+            status=404,
+        )
     except Exception as e:
         return JsonResponse(
             {"status": "error", "message": f"Ошибка при парсинге: {str(e)}"},
