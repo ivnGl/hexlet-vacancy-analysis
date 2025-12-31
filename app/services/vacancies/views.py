@@ -1,15 +1,15 @@
 from django.views import View
 from inertia import render as inertia_render
 
-from .utils.pagination_vacancies import get_pagination_vacancies
+from .utils.paginated_vacancies import get_paginated_vacancies
 
 
-class VacancyList(View):
+class VacancyListView(View):
     async def get(self, request):
-        pagination_vacancies = await get_pagination_vacancies(request)
+        pagination_vacancies = await get_paginated_vacancies(request)
         return inertia_render(
             request,
-            "VacancyPage",
+            "VacanciesPage",
             props={
                 "vacancies": pagination_vacancies["vacancies"],
                 "pagination": pagination_vacancies["pagination"],
