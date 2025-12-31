@@ -50,7 +50,7 @@ def get_search_vacancies(search_query: str = "") -> list[dict[str, str]]:
     ]
 
 
-async def get_pagination_vacancies(request):
+async def get_paginated_vacancies(request):
     page_number = int(request.GET.get("page", 1))
     search_query = request.GET.get("search", "").strip()
 
@@ -78,7 +78,8 @@ async def get_pagination_vacancies(request):
 
         for response in responses:
             if response.status_code == 200:
-                return await get_pagination_vacancies(request)
+                """Refetch paginated vacancies with new data"""
+                return await get_paginated_vacancies(request)
         logger.error(f"Fetch error, status code: {response.status_code}")
 
     return {
