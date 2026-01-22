@@ -93,7 +93,7 @@ make docker-up
 
 .
 
-## Paser:
+## Parser:
 To parse hh.ru or superjob.ru you need to create a local database and go to /parser/hh 
 or /parser/superjob
 

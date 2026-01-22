@@ -1,8 +1,11 @@
+import logging
 import os
 import time
 
 import requests
 from bs4 import BeautifulSoup
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 from app.parser import get_fixture_data, save_data
 
@@ -13,15 +16,38 @@ class BaseVacancyParser:
     DEFAULT_DELAY = 0.3
     CACHE_FILE = os.path.join(os.path.dirname(__file__), 'city_region_mapping.json')
 
+    def __init__(self):
+        self.session = requests.Session()
+        retries = Retry(
+            total=3,
+            backoff_factor=0.5,
+            status_forcelist=[429, 500, 502, 503, 504]
+        )
+        self.session.mount('https://', HTTPAdapter(max_retries=retries))
+
     def fetch_data(self, params=None, item_id=None):
         url = self.API_URL
         if item_id:
             url = f"{self.API_URL}/{item_id}"
             time.sleep(self.DEFAULT_DELAY)
 
-        response = requests.get(url, params=params, headers=self.HEADERS)
-        response.raise_for_status()
-        return response.json()
+        response = None
+        try:
+            response = self.session.get(
+                url,
+                params=params,
+                headers=self.HEADERS,
+                timeout=10
+            )
+            response.raise_for_status()
+            return response.json()
+        except requests.Timeout as e:
+            logging.error(f"Timeout fetching data: {str(e)}")
+            raise ValueError("Request timeout")
+        except requests.RequestException as e:
+            logging.error(f"Error fetching data: {str(e)}")
+            status = response.status_code if response is not None else 'unknown'
+            raise ValueError(f"Error fetching data: {status}")
 
     def fetch_items_list(self, search_params):
         return self.fetch_data(params=search_params)
@@ -86,9 +112,17 @@ class BaseVacancyParser:
         else:
             raise ValueError('Unknown source')
 
-        response = requests.get(url)
-        if response.status_code != 200:
-            raise ValueError(f"Error fetching areas: {response.status_code}")
+        response = None
+        try:
+            response = self.session.get(url, timeout=10)
+            response.raise_for_status()
+        except requests.Timeout as e:
+            logging.error(f"Timeout fetching areas: {str(e)}")
+            raise ValueError("Request timeout")
+        except requests.RequestException as e:
+            logging.error(f"Error fetching areas: {str(e)}")
+            status = response.status_code if response is not None else 'unknown'
+            raise ValueError(f"Error fetching areas: {status}")
 
         areas = response.json()
         mapping = {}
