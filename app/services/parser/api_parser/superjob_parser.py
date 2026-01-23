@@ -13,6 +13,7 @@ class SuperjobVacancyParser(BaseVacancyParser):
     HEADERS = {"X-Api-App-Id": SUPERJOB_API_KEY}
 
     def __init__(self):
+        super().__init__()
         self.mapping = self.get_city_to_region_mapping(source='superjob')
 
     def parse_vacancies(self, search_params):

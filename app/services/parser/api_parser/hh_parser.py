@@ -6,6 +6,7 @@ class HhVacancyParser(BaseVacancyParser):
     HEADERS = {"User-Agent": "HH-User-Agent"}
 
     def __init__(self):
+        super().__init__()
         self.mapping = self.get_city_to_region_mapping(source='hh')
 
     def fetch_vacancies_list(self, search_params):
