@@ -53,7 +53,8 @@ INSTALLED_APPS = [
     "django_vite",
     "app.services.auth.tinkoff_id",
     "app.services.ai",
-    "app.services.foragencies"
+    "app.services.pricing",
+    "app.services.foragencies",
 ]
 
 AUTH_USER_MODEL = "users.User"
