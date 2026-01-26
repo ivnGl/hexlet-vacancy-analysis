@@ -21,5 +21,8 @@ test_fixtures.sh
 error.html
 **/.DS_Store
 **/node_modules/
+
+sqlite3
+
 staticfiles/
 static/

@@ -30,6 +30,7 @@ urlpatterns = [
     path("account/", include("app.services.account.urls")),
     path('pricing/', include('app.services.pricing.urls')),
     path("foragencies/", include("app.services.foragencies.urls")),
+    path('parser/', include('app.services.parser.urls')),
 ]
 
 handler500 = views.custom_server_error
