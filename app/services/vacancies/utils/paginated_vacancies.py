@@ -21,11 +21,14 @@ def get_search_vacancies(search_query: str = "") -> list[dict[str, str]]:
     qs = Vacancy.objects.select_related("company", "city", "platform")
 
     if search_query:
-        qs = qs.filter(
-            Q(title__icontains=search_query)
-            | Q(company__name__icontains=search_query)
-            | Q(description__icontains=search_query)
-        )
+        terms = search_query.split(' ')
+        for term in terms:
+            qs = qs.filter(
+                Q(title__icontains=term)
+                | Q(company__name__icontains=term)
+                | Q(description__icontains=term)
+                | Q(city__name__icontains=term)
+            )
 
     return [
         {

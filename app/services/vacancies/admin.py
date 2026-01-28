@@ -1,32 +1,28 @@
 from django.contrib import admin
 
 from .models import Vacancy
-from .utils.custom_title import custom_title_filter_factory
 
 
 @admin.register(Vacancy)
 class VacancyAdmin(admin.ModelAdmin):
     list_display = (
         "title",
-        "company__name",
+        "company",
         "city",
         "salary",
         "experience",
-        "platform__name",
+        "platform",
         "published_at",
     )
     search_fields = (
         "title",
         "company__name",
         "city__name",
-        "platform__name",
+        "platform",
         "skills",
     )
     list_filter = (
-        (
-            "platform",
-            custom_title_filter_factory(admin.RelatedFieldListFilter, "Platform"),
-        ),
+        "platform",
         "city",
         "experience",
         "schedule",
