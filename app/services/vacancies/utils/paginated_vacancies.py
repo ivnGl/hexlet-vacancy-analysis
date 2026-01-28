@@ -12,6 +12,8 @@ from app.services.vacancies.models import Vacancy
 VACANCIES_PER_PAGE = 5
 PLATFORM_VACANCIES_QTY = VACANCIES_PER_PAGE * 2
 HH_AREA_DEFAULT = 1
+HH_VACANCY_CATEGORIES = [96, 165]
+SUPERJOB_VACANCY_CATEGORY = 33
 
 logger = logging.getLogger(__name__)
 
@@ -67,11 +69,13 @@ async def get_paginated_vacancies(request):
             "per_page": PLATFORM_VACANCIES_QTY,
             "page": page_obj.number - 1,
             "order_by": "publication_time",
+            "professional_role": HH_VACANCY_CATEGORIES,
         }
         superjob_params = {
             "keyword": search_query,
             "count": PLATFORM_VACANCIES_QTY,
             "page": page_obj.number - 1,
+            "catalogues": SUPERJOB_VACANCY_CATEGORY,
         }
 
         responses = await asyncio.gather(
