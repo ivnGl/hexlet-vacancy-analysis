@@ -6,7 +6,7 @@ from app.services.vacancies.models import Vacancy
 
 async def process_vacancies(
     fetch_vacancies, transform_data, params: dict[str, any]
-) -> tuple[int, list[str]]:
+) -> JsonResponse:
     saved_count = 0
     errors: list[str] = []
     try:
