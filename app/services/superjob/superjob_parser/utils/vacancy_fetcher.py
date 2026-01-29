@@ -16,9 +16,11 @@ async def fetch_superjob_vacancies(params):
     base_url = "https://api.superjob.ru/2.0/vacancies"
     headers = {"X-Api-App-Id": secret_key}
     api_client = HTTPClient(base_url, headers)
+    urls = [base_url]
 
-    data = await api_client.get(params=params)
-    if not data.get("objects"):
-        logger.warning("No vacancy found in superjob api")
-        raise ValueError("No vacancy found in superjob api")
-    return data.get("objects")
+    responses = await api_client.get(urls=urls, params=params)
+    for response in responses:
+        if not response.get("objects"):
+            logger.warning("No vacancy found in superjob api")
+            raise ValueError("No vacancy found in superjob api")
+        return response.get("objects")
