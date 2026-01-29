@@ -23,13 +23,13 @@ def format_salary(salary_data: Optional[dict[str, any]]) -> str:
         try:
             int(salary_from)
             parts.append(f"от {salary_from}")
-        except ValueError:
+        except ValueError or TypeError:
             logger.info("Salary from not a number")
     if salary_to:
         try:
             int(salary_to)
             parts.append(f"до {salary_to}")
-        except ValueError:
+        except ValueError or TypeError:
             logger.warning("Salary to not a number")
     if salary_data.get("currency"):
         parts.append(salary_data["currency"])
