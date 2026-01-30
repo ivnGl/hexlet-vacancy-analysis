@@ -1,5 +1,5 @@
 import logging
-import traceback
+
 from asgiref.sync import sync_to_async
 from django.http import JsonResponse
 
@@ -42,4 +42,3 @@ def save_vacancy(transform_data, item):
         platform_vacancy_id=transformed_data["platform_vacancy_id"],
         defaults=transformed_data,
     )
-    

@@ -23,7 +23,7 @@ def get_search_vacancies(search_query: str = "") -> list[dict[str, str]]:
     qs = Vacancy.objects.select_related("company", "city", "platform")
 
     if search_query:
-        terms = search_query.split(' ')
+        terms = search_query.split()
         for term in terms:
             qs = qs.filter(
                 Q(title__icontains=term)
@@ -63,7 +63,7 @@ async def get_paginated_vacancies(request):
     paginator = Paginator(vacancies, VACANCIES_PER_PAGE)
     page_obj = paginator.get_page(page_number)
 
-    if page_obj.number == paginator.num_pages:
+    if page_number == paginator.num_pages:
         hh_params = {
             "text": search_query,
             "per_page": PLATFORM_VACANCIES_QTY,
