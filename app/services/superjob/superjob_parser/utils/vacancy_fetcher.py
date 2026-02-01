@@ -19,8 +19,9 @@ async def fetch_superjob_vacancies(params):
     urls = [base_url]
 
     responses = await api_client.get(urls=urls, params=params)
-    for response in responses:
-        if not response.get("objects"):
-            logger.warning("No vacancy found in superjob api")
-            raise ValueError("No vacancy found in superjob api")
-        return response.get("objects")
+
+    vacancies = responses[0].get("objects")
+    if vacancies:
+        return (vacancies, responses[0].get("total"))
+    else:
+        raise ValueError("Vacancy not found")

@@ -55,39 +55,52 @@ def get_search_vacancies(search_query: str = "") -> list[dict[str, str]]:
     ]
 
 
-async def get_paginated_vacancies(request):
-    page_number = int(request.GET.get("page", 1))
-    search_query = request.GET.get("search", "").strip()
+async def fetch_vacancies(search_query, page_obj):
+    hh_params = {
+        "text": search_query,
+        "per_page": PLATFORM_VACANCIES_QTY,
+        "page": page_obj.number - 1,
+        "order_by": "publication_time",
+        "professional_role": HH_VACANCY_CATEGORIES,
+    }
+    superjob_params = {
+        "keyword": search_query,
+        "count": PLATFORM_VACANCIES_QTY,
+        "page": page_obj.number - 1,
+        "catalogues": SUPERJOB_VACANCY_CATEGORY,
+    }
+    responses = await asyncio.gather(
+        hh_vacancy_parse(params=hh_params),
+        superjob_vacancy_parse(params=superjob_params),
+    )
+    return responses
 
-    vacancies = await get_search_vacancies(search_query)
+
+def paginate(vacancies, page_number):
     paginator = Paginator(vacancies, VACANCIES_PER_PAGE)
     page_obj = paginator.get_page(page_number)
 
-    if page_number == paginator.num_pages:
-        hh_params = {
-            "text": search_query,
-            "per_page": PLATFORM_VACANCIES_QTY,
-            "page": page_obj.number - 1,
-            "order_by": "publication_time",
-            "professional_role": HH_VACANCY_CATEGORIES,
-        }
-        superjob_params = {
-            "keyword": search_query,
-            "count": PLATFORM_VACANCIES_QTY,
-            "page": page_obj.number - 1,
-            "catalogues": SUPERJOB_VACANCY_CATEGORY,
-        }
+    return (vacancies, paginator, page_obj)
 
-        responses = await asyncio.gather(
-            hh_vacancy_parse(params=hh_params),
-            superjob_vacancy_parse(params=superjob_params),
-        )
+
+async def get_paginated_vacancies(request):
+    page_number = int(request.GET.get("page", 1))
+    search_query = request.GET.get("search", "").strip()
+    vacancies = await get_search_vacancies(search_query)
+    (vacancies, paginator, page_obj) = paginate(vacancies, page_number)
+
+    if page_obj.number == paginator.num_pages:
+        responses = await fetch_vacancies(search_query, page_obj)
 
         for response in responses:
             if response.status_code == 200:
                 """Refetch paginated vacancies with new data"""
-                return await get_paginated_vacancies(request)
-        logger.error(f"Fetch error, status code: {response.status_code}")
+                vacancies = await get_search_vacancies(search_query)
+                (_, paginator, page_obj) = paginate(vacancies, page_number)
+            else:
+                logger.error(
+                    f"Fetch error, status code: {response.status_code}"
+                )
 
     return {
         "pagination": {

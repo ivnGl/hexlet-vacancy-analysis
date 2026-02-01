@@ -20,6 +20,16 @@ async def process_vacancies(
             {"status": "error", "message": f"Vacancies not found: {str(e)}"},
             status=404,
         )
+    except AttributeError as e:
+        return JsonResponse(
+            {"status": "error", "message": f"{str(e)}"},
+            status=500,
+        )
+    except RuntimeError as e:
+        return JsonResponse(
+            {"status": "error", "message": f"{str(e)}"},
+            status=500,
+        )
     except Exception as e:
         return JsonResponse(
             {"status": "error", "message": f"Ошибка при парсинге: {str(e)}"},
@@ -30,6 +40,7 @@ async def process_vacancies(
             "status": "success",
             "vacancies": vacancies,
             "message": f"Успешно сохранено {len(vacancies)} вакансий",
+            "total": len(vacancies),
         },
         status=200,
     )

@@ -26,7 +26,7 @@ class HTTPClient(HTTPClientInterface):
     async def fetch(self, session, url, semaphore, params):
         async with semaphore:
             async with session.get(url, params=params, headers=self.headers) as response:
-                response.raise_for_status()
+                #response.raise_for_status()
                 return await response.json()
 
     async def get(
@@ -36,6 +36,6 @@ class HTTPClient(HTTPClientInterface):
     ) -> any:
         semaphore = asyncio.Semaphore(self.CONCURRENT_LIMIT)
         timeout = aiohttp.ClientTimeout(total=self.timeout)
-        async with aiohttp.ClientSession(timeout=timeout) as session:
+        async with aiohttp.ClientSession(timeout=timeout, raise_for_status=True) as session:
             tasks = [self.fetch(session, url, semaphore, params) for url in urls]
             return await asyncio.gather(*tasks, return_exceptions=True)
