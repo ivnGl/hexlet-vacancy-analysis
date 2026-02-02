@@ -37,12 +37,8 @@ async def process_vacancies(
 
 @sync_to_async
 def save_vacancy(transform_data, item):
-    try:
-        transformed_data = transform_data(item)
-        Vacancy.objects.update_or_create(
-            platform_vacancy_id=transformed_data["platform_vacancy_id"],
-            defaults=transformed_data,
-        )
-    except Exception as e:
-        logger.warning(f"Data transform error: {str(e)}")
-        raise TypeError("Data transform error") from e
+    transformed_data = transform_data(item)
+    Vacancy.objects.update_or_create(
+        platform_vacancy_id=transformed_data["platform_vacancy_id"],
+        defaults=transformed_data,
+    )
