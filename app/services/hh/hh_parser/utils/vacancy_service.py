@@ -16,13 +16,15 @@ async def process_vacancies(
         for vacancy in vacancies:
             await save_vacancy(transform_data, vacancy)
     except ValueError as e:
+        logger.error(str(e))
         return JsonResponse(
-            {"status": "error", "message": f"Vacancies not found: {str(e)}"},
+            {"status": "error", "message": "Vacancies not found"},
             status=404,
         )
     except Exception as e:
+        logger.error(str(e))
         return JsonResponse(
-            {"status": "error", "message": f"Ошибка при парсинге: {str(e)}"},
+            {"status": "error", "message": "Ошибка при парсинге"},
             status=500,
         )
     return JsonResponse(
