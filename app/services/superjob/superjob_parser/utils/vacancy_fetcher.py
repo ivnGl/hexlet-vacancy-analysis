@@ -22,6 +22,6 @@ async def fetch_superjob_vacancies(params):
 
     vacancies = responses[0].get("objects")
     if vacancies:
-        return (vacancies, responses[0].get("total"))
+        return responses[0].get("objects")
     else:
         raise ValueError("Vacancy not found")

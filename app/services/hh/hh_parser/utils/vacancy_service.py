@@ -39,8 +39,7 @@ async def process_vacancies(
         {
             "status": "success",
             "vacancies": vacancies,
-            "message": f"Успешно сохранено {len(vacancies)} вакансий",
-            "total": len(vacancies),
+            "message": f"Успешно сохранено {len(vacancies)} вакансий"
         },
         status=200,
     )
