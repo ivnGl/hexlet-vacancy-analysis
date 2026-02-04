@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     "app.services.parser",
     "app.services.foragencies",
     "app.services.pricing",
+    "app.services.vacancies",
 ]
 
 AUTH_USER_MODEL = "users.User"
