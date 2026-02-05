@@ -230,6 +230,7 @@ TINKOFF_ID_SCOPE = ["profile", "email"]
 
 # AI settings
 AI_API_KEY = os.getenv("AI_API_KEY", "")
-AI_MAX_HISTORY_LENGTH = 10
-AI_API_TIMEOUT = 10
-AI_MODEL = "nex-agi/deepseek-v3.1-nex-n1:free"
+AI_API_TIMEOUT = os.getenv("AI_API_TIMEOUT", 10)
+AI_API_MODEL = os.getenv("AI_API_MODEL", "")
+
+CHAT_MAX_HISTORY_LENGHT = os.getenv("CHAT_MAX_HISTORY_LENGHT", 10)

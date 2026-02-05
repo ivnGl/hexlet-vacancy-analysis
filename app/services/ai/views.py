@@ -1,5 +1,4 @@
 import logging
-from typing import List
 
 from django.conf import settings
 from django.http import HttpRequest, JsonResponse
@@ -7,9 +6,9 @@ from django.views import View
 from inertia import InertiaResponse  # type: ignore
 from inertia import render as inertia_render
 
-from .exceptions import OpenAIError
-from .models import ChatMessage
-from .openrouter import OpenRouterChat
+from .services.chat_service import ChatMessageService
+from .services.exceptions import OpenAIError
+from .services.openrouter import OpenRouterChat
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +19,16 @@ class AIAssistantView(View):
     и анонимных пользователей.
     Обрабатывает отображение страницы и обмен сообщениями с AI через OpenRouter API.
     """
+
+    ai_sercice = OpenRouterChat(
+        api_key=settings.AI_API_KEY,
+        model=settings.AI_API_MODEL,
+        timeout=int(settings.AI_API_TIMEOUT),
+    )
+    chat_service = ChatMessageService(
+        ai_services=ai_sercice,
+        max_history_lenght=int(settings.CHAT_MAX_HISTORY_LENGHT),
+    )
 
     def get(self, request: HttpRequest) -> InertiaResponse:
         """
@@ -33,7 +42,7 @@ class AIAssistantView(View):
         Returns:
             InertiaResponse: Страница с пропсами сообщений
         """
-        messages: List[dict[str, str]] = self.get_messages(request)
+        messages = self.chat_service.get_user_messages(request)
         return inertia_render(
             request,
             "AIAssistantPage",
@@ -59,74 +68,21 @@ class AIAssistantView(View):
         if message is None:
             return JsonResponse({"error": "Message is required"}, status=400)
 
-        messages: List[dict[str, str]] = self.get_messages(request)
-        chat: OpenRouterChat = OpenRouterChat(
-            api_key=settings.AI_API_KEY,
-            messages=messages,
-        )
+        history_user_messages = self.chat_service.get_user_messages(request)
+        self.chat_service.set_messages(history_user_messages)
 
         try:
-            response = chat.send_message(message)
-        except TimeoutError:
-            logger.error("Превышено время обращения к openAI")
-            return JsonResponse({"error": "Request timed out"}, status=504)
+            response = self.chat_service.get_response_ai(message)
+        except TimeoutError as e:
+            logger.error(str(e))
+            return JsonResponse({"error": str(e)}, status=504)
         except OpenAIError as e:
             logger.error(str(e))
-            return JsonResponse({"error": "OpenAI error"}, status=500)
-        except Exception as e:
-            logger.error(f"Ошибка при запросе к openAI: {str(e)}")
             return JsonResponse({"error": str(e)}, status=500)
-
-        messages = chat.messages
-
-        user = request.user if request.user.is_authenticated else None
-        cookie_hash = hash(request.COOKIES.get(settings.CSRF_COOKIE_NAME))
 
         try:
-            if user:
-                obj, created = ChatMessage.objects.update_or_create(
-                    user=user,
-                    defaults={
-                        "messages": messages,
-                        "cookie_hash": cookie_hash,
-                    },
-                )
-            else:
-                obj, created = ChatMessage.objects.update_or_create(
-                    cookie_hash=cookie_hash,
-                    defaults={
-                        "messages": messages,
-                        "user": None,
-                    },
-                )
+            self.chat_service.save_messages(request)
         except Exception as e:
-            logger.error(f"Ошибка при обновлении или сохранении: {str(e)}")
             return JsonResponse({"error": str(e)}, status=500)
 
-        if created:
-            logger.info(f"Создана новая запись: {obj.pk}")
-        else:
-            logger.info(f"Обновлена существующая запись: {obj.pk}")
-
         return JsonResponse({"message": response}, status=200)
-
-    def get_messages(self, request: HttpRequest) -> List[dict[str, str]]:
-        """
-        Получает историю сообщений пользователя.
-
-        Для аутентифицированных - по пользователю, для анонимных - по хешу cookie.
-
-        Args:
-            request (HttpRequest): Объект запроса
-
-        Returns:
-            List[dict]: История сообщений или пустой список
-        """
-        if request.user.is_authenticated:
-            return ChatMessage.objects.filter(user=request.user)[0].messages
-        else:
-            try:
-                cookie_hash = hash(request.COOKIES[settings.CSRF_COOKIE_NAME])
-                return ChatMessage.objects.filter(cookie_hash=cookie_hash)[0].messages
-            except IndexError:
-                return []
