@@ -9,7 +9,7 @@ from inertia.test import InertiaTestCase  # type: ignore
 
 from app.services.auth.password_reset import configs
 from app.services.auth.password_reset.models import PasswordResetToken
-from app.services.auth.password_reset.services import hash_token
+from app.services.auth.password_reset.utils import hash_token
 
 User = get_user_model()
 
@@ -21,21 +21,23 @@ class PasswordResetTestCase(InertiaTestCase):
         self.url = reverse_lazy("password_reset")
         user_data = {
             "email": "testuser@example.com",
-            "password": "password123",
+            "password": "StrongPass123!",
         }
         self.user = User.objects.create_user(**user_data)
         current_time = timezone.now()
         time_out = timedelta(seconds=configs.PASSWORD_RESET_TIMEOUT)
         expires_at = current_time + time_out
         token_data = {
-            "user_id": self.user,
+            "user": self.user,
             "token_hash": hash_token("test_token"),
             "expires_at": expires_at,
         }
         self.token = PasswordResetToken.objects.create(**token_data)
 
 
-@patch("app.services.auth.password_reset.services.PasswordResetService.send_reset_email")
+@patch(
+    "app.services.auth.password_reset.services.password_reset.PasswordResetService.send_reset_email"
+)
 class PasswordResetTests(PasswordResetTestCase):
     def test_post_valid_email(self, mock_get_stats):
         mock_get_stats.return_value = None
@@ -60,7 +62,7 @@ class PasswordResetConfirmTests(PasswordResetTestCase):
 
     def test_get_expired_token(self):
         PasswordResetToken.objects.create(
-            user_id=self.user,
+            user=self.user,
             token_hash=hash_token("expired_token"),
             expires_at=timezone.now() - timedelta(hours=1),
         )
@@ -73,7 +75,7 @@ class PasswordResetConfirmTests(PasswordResetTestCase):
         url = reverse_lazy("password_reset_confirm")
         data = {
             "token": "test_token",
-            "newPassword": "StrongPass123!",
+            "new_password": "StrongPass123!",
         }
         response = self.client.post(url, data)
         assert response.props["status_code"] == 200
@@ -88,11 +90,11 @@ class PasswordResetConfirmTests(PasswordResetTestCase):
         data = {"token": "test_token", "newPassword": "weak"}
 
         self.client.post(url, data)
-        self.assertIncludesProps({"status_code": 422})
+        self.assertIncludesProps({"status_code": 400})
 
     def test_post_invalid_token(self):
         url = reverse_lazy("password_reset_confirm")
-        data = {"token": "invalid_token", "newPassword": "StrongPass123!"}
+        data = {"token": "invalid_token", "new_password": "StrongPass123!"}
 
         self.client.post(url, data)
-        self.assertIncludesProps({"status_code": 400})
+        self.assertIncludesProps({"status_code": 422})

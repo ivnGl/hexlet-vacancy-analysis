@@ -2,21 +2,18 @@ import logging
 from typing import Any
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError
-from django.core.validators import validate_email
-from django.db import transaction
 from django.http import HttpRequest
 from django.urls import reverse
-from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views import View
 from django_ratelimit.decorators import ratelimit  # type: ignore
 from inertia import InertiaResponse, location  # type: ignore
 from inertia import render as inertia_render
 
-from .models import PasswordResetToken
-from .services import PasswordResetService, hash_token
+from .forms import PasswordResetConfirmForm, PasswordResetForm
+from .services.exceptions import InvalidToken
+from .services.password_reset import PasswordResetService
+from .services.password_reset_confirm import ConfirmPasswordResetService
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -33,7 +30,7 @@ class PasswordResetView(View):
     - Ограничение частоты запросов через декораторы.
     """
 
-    password_reset_service: PasswordResetService = PasswordResetService()
+    service: PasswordResetService = PasswordResetService()
 
     def get(self, request: HttpRequest) -> InertiaResponse:
         """
@@ -86,8 +83,8 @@ class PasswordResetView(View):
                 },
             )
 
-        email: str | None = request.POST.get("email")
-        if not email:
+        form = PasswordResetForm(request.POST)
+        if not form.is_valid():
             return inertia_render(
                 request,
                 "ErrorPage",
@@ -98,33 +95,10 @@ class PasswordResetView(View):
                 },
             )
 
-        try:
-            validate_email(email)
-        except ValidationError:
-            return inertia_render(
-                request,
-                "ErrorPage",
-                props={
-                    "status": "Unprocessable Entity",
-                    "status_code": 422,
-                    "message": "Email is invalid",
-                },
-            )
-
-        try:
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            logger.info("password reset requested for unknown email")
-            user = None
-
-        if user:
-            with transaction.atomic():
-                self.password_reset_service.create_and_send(
-                    user=user,
-                    email=email,
-                    request=request,
-                )
-
+        self.service.request_reset(
+            email=form.cleaned_data["email"],
+            request=request,
+        )
         return inertia_render(
             request,
             "PasswordResetCompletePage",
@@ -173,6 +147,8 @@ class PasswordResetConfirmView(View):
     - Валидацию нового пароля перед сохранением.
     """
 
+    service = ConfirmPasswordResetService()
+
     def get(self, request: HttpRequest) -> InertiaResponse:
         """
         Обрабатывает GET-запрос для проверки действительности токена.
@@ -189,42 +165,24 @@ class PasswordResetConfirmView(View):
                   кодом 400.
         """
         token: str | None = request.GET.get("token")
-        if not token:
+        if not token or not self.service.is_valid(token=token):
+            logger.error("Token is expired or invalid")
             return inertia_render(
                 request,
                 "ErrorPage",
                 props={
                     "status": "Bad Request",
                     "status_code": 400,
-                    "message": "Token is required",
+                    "message": "Invalid or expired link",
                 },
             )
-        # Поиск неиспользованного токена по хэшу
-        reset_token = PasswordResetToken.objects.filter(
-            token_hash=hash_token(token), is_used=False
-        ).first()
-
-        if reset_token:
-            # Проверка срока действия токена
-            if reset_token.expires_at > timezone.now():
-                return inertia_render(
-                    request,
-                    "PasswordResetConfirmPage",
-                    props={
-                        "status": "ok",
-                        "status_code": 200,
-                        "data": {"token": token},
-                    },
-                )
-
-        logger.error("Token is expired or invalid")
         return inertia_render(
             request,
-            "ErrorPage",
+            "PasswordResetConfirmPage",
             props={
-                "status": "Bad Request",
-                "status_code": 400,
-                "message": "Ссылка недействительна или истекла",
+                "status": "ok",
+                "status_code": 200,
+                "data": {"token": token},
             },
         )
 
@@ -235,7 +193,7 @@ class PasswordResetConfirmView(View):
         Args:
             request (HttpRequest): Объект HTTP-запроса, содержащий:
                 - 'token': Хэш токена из URL.
-                - 'newPassword': Новый пароль пользователя.
+                - 'new_password': Новый пароль пользователя.
 
         Returns:
             HttpResponse:
@@ -243,10 +201,9 @@ class PasswordResetConfirmView(View):
                 - При ошибках: страница подтверждения с ошибкой 422 или
                   страница ошибки с кодом 400.
         """
-        token: str | None = request.POST.get("token")
-        new_password: str | None = request.POST.get("newPassword")
+        form = PasswordResetConfirmForm(request.POST)
 
-        if not token or not new_password:
+        if not form.is_valid():
             return inertia_render(
                 request,
                 "ErrorPage",
@@ -256,10 +213,12 @@ class PasswordResetConfirmView(View):
                 },
             )
 
-        # Валидация сложности пароля
         try:
-            validate_password(new_password)
-        except ValidationError:
+            self.service.confirm(
+                token=form.cleaned_data["token"],
+                new_password=form.cleaned_data["new_password"],
+            )
+        except InvalidToken:
             return inertia_render(
                 request,
                 "PasswordResetConfirmPage",
@@ -267,33 +226,11 @@ class PasswordResetConfirmView(View):
                     "status": "Unprocessable Entity",
                     "status_code": 422,
                     "message": "Слабый пароль",
-                    "data": {"token": token},
                 },
             )
 
-        # Поиск активного токена
-        reset_token: PasswordResetToken | None = PasswordResetToken.objects.filter(
-            token_hash=hash_token(token), is_used=False
-        ).first()
-
-        if reset_token:
-            if reset_token.expires_at > timezone.now():
-                user = User.objects.get(id=reset_token.user_id.pk)
-                user.set_password(new_password)
-                user.save()
-                reset_token.mark_as_used()
-                return inertia_render(
-                    request,
-                    "HomePage",
-                    props={"status": "ok", "status_code": 200},
-                )
-
         return inertia_render(
             request,
-            "ErrorPage",
-            props={
-                "status": "Bad Request",
-                "status_code": 400,
-                "message": "Недействительный токен",
-            },
+            "HomePage",
+            props={"status": "ok", "status_code": 200},
         )
