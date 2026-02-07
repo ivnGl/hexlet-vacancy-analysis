@@ -1,27 +1,22 @@
 import logging
-from datetime import datetime, timedelta
 from typing import Any
 
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
-from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 from django.db import transaction
 from django.http import HttpRequest
-from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.decorators import method_decorator
-from django.utils.html import strip_tags
 from django.views import View
 from django_ratelimit.decorators import ratelimit  # type: ignore
 from inertia import InertiaResponse, location  # type: ignore
 from inertia import render as inertia_render
 
-from . import configs
 from .models import PasswordResetToken
-from .tasks import send_mail_task
+from .services import PasswordResetService, hash_token
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -38,10 +33,7 @@ class PasswordResetView(View):
     - Ограничение частоты запросов через декораторы.
     """
 
-    subject_template_name = "Password reset"  # Шаблон темы письма
-    email_template_name = "password_reset_email.html"  # Шаблон тела письма
-    from_email = settings.DEFAULT_FROM_EMAIL  # Email-адрес отправителя
-    token_generator = PasswordResetTokenGenerator()  # Генератор токенов
+    password_reset_service: PasswordResetService = PasswordResetService()
 
     def get(self, request: HttpRequest) -> InertiaResponse:
         """
@@ -107,66 +99,36 @@ class PasswordResetView(View):
             )
 
         try:
+            validate_email(email)
+        except ValidationError:
+            return inertia_render(
+                request,
+                "ErrorPage",
+                props={
+                    "status": "Unprocessable Entity",
+                    "status_code": 422,
+                    "message": "Email is invalid",
+                },
+            )
+
+        try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
-            logger.error("email does not belong to any user")
+            logger.info("password reset requested for unknown email")
             user = None
 
         if user:
             with transaction.atomic():
-                # Удаление старых токенов пользователя
-                PasswordResetToken.mark_all_as_used(user)
-
-                # Генерация нового токена и расчет времени истечения
-                token: str = self.token_generator.make_token(user)
-                current_time: datetime = timezone.now()
-                time_out: timedelta = timedelta(configs.PASSWORD_RESET_TIMEOUT)
-                expires_at: datetime = current_time + time_out
-
-                # Формирование ссылки для сброса пароля
-                reset_url: str = request.build_absolute_uri(
-                    reverse("password_reset_redirect") + f"?token={token}"
-                )
-
-                # Отправка email и сохранение токена
-                self.send_reset_email(email, reset_url)
-                PasswordResetToken.objects.create(
-                    user_id=user,
-                    token_hash=hash(token),
-                    expires_at=expires_at,
+                self.password_reset_service.create_and_send(
+                    user=user,
+                    email=email,
+                    request=request,
                 )
 
         return inertia_render(
             request,
             "PasswordResetCompletePage",
             props={"status": "ok", "status_code": 200},
-        )
-
-    def send_reset_email(self, email: str, reset_url: str) -> None:
-        """
-        Отправляет email с ссылкой для сброса пароля.
-
-        Args:
-            email (str): Адрес электронной почты получателя.
-            reset_url (str): Ссылка для сброса пароля.
-        """
-        subject: str = self.subject_template_name
-        html_message: str = render_to_string(
-            self.email_template_name,
-            {
-                "email": email,
-                "reset_url": reset_url,
-            },
-        )
-        plain_message: str = strip_tags(html_message)
-
-        send_mail_task.delay(
-            subject=subject,
-            message=plain_message,
-            html_message=html_message,
-            from_email=self.from_email,
-            recipient_list=[email],
-            fail_silently=False,
         )
 
 
@@ -227,9 +189,19 @@ class PasswordResetConfirmView(View):
                   кодом 400.
         """
         token: str | None = request.GET.get("token")
+        if not token:
+            return inertia_render(
+                request,
+                "ErrorPage",
+                props={
+                    "status": "Bad Request",
+                    "status_code": 400,
+                    "message": "Token is required",
+                },
+            )
         # Поиск неиспользованного токена по хэшу
         reset_token = PasswordResetToken.objects.filter(
-            token_hash=hash(token), is_used=False
+            token_hash=hash_token(token), is_used=False
         ).first()
 
         if reset_token:
@@ -301,7 +273,7 @@ class PasswordResetConfirmView(View):
 
         # Поиск активного токена
         reset_token: PasswordResetToken | None = PasswordResetToken.objects.filter(
-            token_hash=token, is_used=False
+            token_hash=hash_token(token), is_used=False
         ).first()
 
         if reset_token:
