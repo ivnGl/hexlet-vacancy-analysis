@@ -20,15 +20,16 @@ class AIAssistantView(View):
     Обрабатывает отображение страницы и обмен сообщениями с AI через OpenRouter API.
     """
 
-    ai_sercice = OpenRouterChat(
-        api_key=settings.AI_API_KEY,
-        model=settings.AI_API_MODEL,
-        timeout=int(settings.AI_API_TIMEOUT),
-    )
-    chat_service = ChatMessageService(
-        ai_services=ai_sercice,
-        max_history_lenght=int(settings.CHAT_MAX_HISTORY_LENGHT),
-    )
+    def _build_chat_service(self):
+        ai_service = OpenRouterChat(
+            api_key=settings.AI_API_KEY,
+            model=settings.AI_API_MODEL,
+            timeout=int(settings.AI_API_TIMEOUT),
+        )
+        return ChatMessageService(
+            ai_service=ai_service,
+            max_history_length=int(settings.CHAT_MAX_HISTORY_LENGTH),
+        )
 
     def get(self, request: HttpRequest) -> InertiaResponse:
         """
@@ -42,7 +43,11 @@ class AIAssistantView(View):
         Returns:
             InertiaResponse: Страница с пропсами сообщений
         """
-        messages = self.chat_service.get_user_messages(request)
+        chat_service = self._build_chat_service()
+        messages = chat_service.get_history(
+            user=request.user if request.user.is_authenticated else None,
+            session_key=request.session.session_key,
+        )
         return inertia_render(
             request,
             "AIAssistantPage",
@@ -68,21 +73,23 @@ class AIAssistantView(View):
         if message is None:
             return JsonResponse({"error": "Message is required"}, status=400)
 
-        history_user_messages = self.chat_service.get_user_messages(request)
-        self.chat_service.set_messages(history_user_messages)
+        if not request.session.session_key:
+            request.session.save()
+
+        chat_service = self._build_chat_service()
 
         try:
-            response = self.chat_service.get_response_ai(message)
-        except TimeoutError as e:
-            logger.error(str(e))
-            return JsonResponse({"error": str(e)}, status=504)
-        except OpenAIError as e:
-            logger.error(str(e))
-            return JsonResponse({"error": str(e)}, status=500)
+            response = chat_service.hadle_message(
+                user=request.user if request.user.is_authenticated else None,
+                session_key=request.session.session_key,
+                message=message,
+            )
+        except TimeoutError:
+            logger.exception("AI request timeout")
+            return JsonResponse({"error": "AI timeout"}, status=504)
 
-        try:
-            self.chat_service.save_messages(request)
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
+        except OpenAIError:
+            logger.exception("AI provider error")
+            return JsonResponse({"error": "AI provider error"}, status=500)
 
         return JsonResponse({"message": response}, status=200)

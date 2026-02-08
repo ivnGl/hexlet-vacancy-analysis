@@ -25,6 +25,7 @@ class OpenRouterChat:
         self.api_key = api_key
         self.model = model
         self.timeout = timeout
+        self.session = requests.Session()
 
     def get_response(
         self, message: str, history_messages: list[dict[str, str]] | None = None
@@ -52,7 +53,7 @@ class OpenRouterChat:
         messages.append({"role": "user", "content": message})
 
         try:
-            response = requests.post(
+            response = self.session.post(
                 self.BASE_URL,
                 headers={
                     "Authorization": f"Bearer {self.api_key}",
@@ -64,30 +65,23 @@ class OpenRouterChat:
                 },
                 timeout=self.timeout,
             )
+            response.raise_for_status()
         except Timeout as e:
-            error_msg = f"Превышено время ожидания ответа от OpenRouter API: {str(e)}"
-            logger.error(error_msg)
-            raise TimeoutError(error_msg) from e
+            raise TimeoutError("OpenRouter timeout") from e
         except RequestException as e:
-            error_msg = f"Ошибка при запросе к OpenRouter API: {str(e)}"
-            logger.error(error_msg)
-            raise OpenAIError(error_msg) from e
+            raise OpenAIError("OpenRouter request failed") from e
 
         try:
             data = response.json()
         except JSONDecodeError as e:
-            error_msg = f"Ошибка при декодировании JSON ответа от AI API: {str(e)}"
+            error_msg = "Ошибка при декодировании JSON ответа от AI API"
             logger.error(error_msg)
             raise OpenAIError(error_msg) from e
-
-        if response.status_code != 200:
-            error_msg = data.get("error", {}).get("message", "Неизвестная ошибка")
-            raise OpenAIError(f"{error_msg}, code: {response.status_code}")
 
         try:
             assistant_message = data["choices"][0]["message"]["content"]
         except (KeyError, IndexError) as e:
-            error_msg = f"Некорректный формат ответа от OpenRouter API: {str(e)}"
+            error_msg = "Некорректный формат ответа от OpenRouter API"
             logger.error(error_msg)
             raise OpenAIError(error_msg) from e
 
