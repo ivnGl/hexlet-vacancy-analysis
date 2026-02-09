@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "django_vite",
     "app.services.auth.tinkoff_id",
     "app.services.parser",
+    "app.services.ai",
     "app.services.foragencies",
     "app.services.pricing",
     "app.services.vacancies",
@@ -230,3 +231,10 @@ TINKOFF_ID_TOKEN_URL = "https://id.tinkoff.ru/auth/token"
 TINKOFF_ID_USERINFO_URL = "https://id.tinkoff.ru/userinfo/userinfo"
 TINKOFF_ID_INTROSPECT_URL = "https://id.tinkoff.ru/auth/introspect"
 TINKOFF_ID_SCOPE = ["profile", "email"]
+
+# AI settings
+AI_API_KEY = os.getenv("AI_API_KEY", "")
+AI_API_TIMEOUT = os.getenv("AI_API_TIMEOUT", 10)
+AI_API_MODEL = os.getenv("AI_API_MODEL", "")
+
+CHAT_MAX_HISTORY_LENGTH = os.getenv("CHAT_MAX_HISTORY_LENGTH", 10)
