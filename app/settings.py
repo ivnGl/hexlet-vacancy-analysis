@@ -53,8 +53,11 @@ INSTALLED_APPS = [
     "app.services.auth.password_reset",
     "app.services.account",
     "app.services.auth.tinkoff_id",
-    "app.services.pricing",
+    "app.services.parser",
+    "app.services.ai",
     "app.services.foragencies",
+    "app.services.pricing",
+    "app.services.vacancies",
 ]
 
 AUTH_USER_MODEL = "users.User"
@@ -189,6 +192,8 @@ EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 EMAIL_TIMEOUT = int(os.environ.get("EMAIL_TIMEOUT", 10))
 
+
+FIXTURE_PATH = 'app/fixtures'
 YANDEX_CLIENT_ID = os.getenv("YANDEX_CLIENT_ID", "")
 YANDEX_CLIENT_SECRET = os.getenv("YANDEX_CLIENT_SECRET", "")
 YANDEX_REDIRECT_URI = os.getenv("YANDEX_REDIRECT_URI", "")
@@ -237,3 +242,10 @@ TINKOFF_ID_TOKEN_URL = "https://id.tinkoff.ru/auth/token"
 TINKOFF_ID_USERINFO_URL = "https://id.tinkoff.ru/userinfo/userinfo"
 TINKOFF_ID_INTROSPECT_URL = "https://id.tinkoff.ru/auth/introspect"
 TINKOFF_ID_SCOPE = ["profile", "email"]
+
+# AI settings
+AI_API_KEY = os.getenv("AI_API_KEY", "")
+AI_API_TIMEOUT = os.getenv("AI_API_TIMEOUT", 10)
+AI_API_MODEL = os.getenv("AI_API_MODEL", "")
+
+CHAT_MAX_HISTORY_LENGTH = os.getenv("CHAT_MAX_HISTORY_LENGTH", 10)
