@@ -218,8 +218,11 @@ INERTIA_LAYOUT = BASE_DIR / "app" / "templates" / "index.html"
 CSRF_HEADER_NAME = "HTTP_X_XSRF_TOKEN"
 CSRF_COOKIE_NAME = "XSRF-TOKEN"
 
-# email for send mail
-DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "")
+# Password reset
+EMAIL_FOR_PASSWORD_RESET = os.environ.get("EMAIL_FOR_PASSWORD_RESET", "")
+PASSWORD_RESET_TIMEOUT = os.environ.get("PASSWORD_RESET_TIMEOUT", 3600)
+
+MAX_RETRIES_TO_SEND = os.environ.get("MAX_RETRIES_TO_SEND", 3)
 
 # Celery settings
 CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379")

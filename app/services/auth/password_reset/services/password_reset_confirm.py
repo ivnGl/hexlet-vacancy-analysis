@@ -6,7 +6,7 @@ from .exceptions import InvalidToken
 
 class ConfirmPasswordResetService:
     @transaction.atomic
-    def confirm(self, *, token: str, new_password: str):
+    def confirm(self, *, token: str, new_password: str) -> None:
         reset_token = PasswordResetToken.find_active(token)
 
         if not reset_token:

@@ -1,4 +1,3 @@
-import logging
 from datetime import timedelta
 
 from django.conf import settings
@@ -12,26 +11,23 @@ from django.utils.html import strip_tags
 
 from app.services.auth.users.models import User
 
-from .. import configs
 from ..models import PasswordResetToken
 from ..tasks import send_mail_task
 from ..utils import hash_token
-
-logger = logging.getLogger(__name__)
+from .exceptions import ResetException
 
 
 class PasswordResetService:
     subject_template_name: str = "Password reset"
     email_template_name: str = "password_reset_email.html"
-    from_email: str = settings.DEFAULT_FROM_EMAIL
+    from_email: str = settings.EMAIL_FOR_PASSWORD_RESET
     token_generator: PasswordResetTokenGenerator = PasswordResetTokenGenerator()
 
     def request_reset(self, *, email: str, request: HttpRequest) -> None:
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
-            logger.info("Password reset requested for unknown email")
-            return
+            raise ResetException
 
         self.create_and_send(
             user=user,
@@ -44,7 +40,9 @@ class PasswordResetService:
         PasswordResetToken.mark_all_as_used(user)
 
         token = self.token_generator.make_token(user)
-        expires_at = timezone.now() + timedelta(seconds=configs.PASSWORD_RESET_TIMEOUT)
+        expires_at = timezone.now() + timedelta(
+            seconds=int(settings.PASSWORD_RESET_TIMEOUT)
+        )
 
         reset_url = request.build_absolute_uri(
             reverse("password_reset_redirect") + f"?token={token}"

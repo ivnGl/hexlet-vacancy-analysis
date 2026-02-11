@@ -1,13 +1,13 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import Client
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from inertia.test import InertiaTestCase  # type: ignore
 
-from app.services.auth.password_reset import configs
 from app.services.auth.password_reset.models import PasswordResetToken
 from app.services.auth.password_reset.utils import hash_token
 
@@ -25,7 +25,7 @@ class PasswordResetTestCase(InertiaTestCase):
         }
         self.user = User.objects.create_user(**user_data)
         current_time = timezone.now()
-        time_out = timedelta(seconds=configs.PASSWORD_RESET_TIMEOUT)
+        time_out = timedelta(seconds=settings.PASSWORD_RESET_TIMEOUT)
         expires_at = current_time + time_out
         token_data = {
             "user": self.user,

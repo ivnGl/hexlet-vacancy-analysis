@@ -1,7 +1,6 @@
 import logging
 from typing import Any
 
-from django.contrib.auth import get_user_model
 from django.http import HttpRequest
 from django.urls import reverse
 from django.utils.decorators import method_decorator
@@ -11,11 +10,10 @@ from inertia import InertiaResponse, location  # type: ignore
 from inertia import render as inertia_render
 
 from .forms import PasswordResetConfirmForm, PasswordResetForm
-from .services.exceptions import InvalidToken
+from .services.exceptions import InvalidToken, ResetException
 from .services.password_reset import PasswordResetService
 from .services.password_reset_confirm import ConfirmPasswordResetService
 
-User = get_user_model()
 logger = logging.getLogger(__name__)
 
 
@@ -94,11 +92,14 @@ class PasswordResetView(View):
                     "message": "Email is required",
                 },
             )
+        try:
+            self.service.request_reset(
+                email=form.cleaned_data["email"],
+                request=request,
+            )
+        except ResetException:
+            logger.info("Password reset requested for unknown email")
 
-        self.service.request_reset(
-            email=form.cleaned_data["email"],
-            request=request,
-        )
         return inertia_render(
             request,
             "PasswordResetCompletePage",

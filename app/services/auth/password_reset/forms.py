@@ -7,7 +7,7 @@ class PasswordResetForm(forms.Form):
 
 
 class PasswordResetConfirmForm(forms.Form):
-    token = forms.CharField(max_length=255)
+    token = forms.CharField()
     new_password = forms.CharField()
 
     def clean_new_password(self):

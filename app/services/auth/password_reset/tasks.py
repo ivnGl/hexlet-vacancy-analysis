@@ -1,29 +1,30 @@
 import logging
-from typing import Sequence
+import smtplib
 
+from django.conf import settings
 from django.core.mail import send_mail
 
 from app.celery import app
-from app.services.auth.password_reset import configs
 
 logger = logging.getLogger(__name__)
 
 
-@app.task(
-    bind=True,
-    max_retries=configs.MAX_RETRIES,
-    default_retry_delay=60,
-    autoretry_for=(Exception,),
-    retry_backoff=True,
-    retry_jitter=True,
+TRANSIENT_EMAIL_ERRORS = (
+    smtplib.SMTPServerDisconnected,
+    smtplib.SMTPConnectError,
+    smtplib.SMTPHeloError,
+    TimeoutError,
 )
+
+
+@app.task(bind=True, max_retries=int(settings.MAX_RETRIES_TO_SEND))
 def send_mail_task(
     self,
     subject: str,
     message: str,
     html_message: str,
     from_email: str,
-    recipient_list: Sequence[str],
+    recipient_list: list[str],
     fail_silently: bool = False,
 ) -> None:
     """
@@ -33,8 +34,6 @@ def send_mail_task(
     для повторных попыток.
     Поддерживает plain text и HTML версии письма.
     """
-    current_retry = self.request.retries
-    max_retries = self.max_retries
     try:
         send_mail(
             subject=subject,
@@ -44,16 +43,10 @@ def send_mail_task(
             recipient_list=recipient_list,
             fail_silently=fail_silently,
         )
-        logger.info(f"Password reset email sent to '{recipient_list}'")
-    except Exception as e:
-        logger.warning(
-            f"Attempt {current_retry + 1} failed to send password "
-            f"reset email to '{recipient_list}': {str(e)}"
-        )
-        if current_retry >= max_retries - 1:
-            logger.error(
-                f"Failed to send password reset email to '{recipient_list}' "
-                f"after [{max_retries}] attempts"
-            )
-        if not fail_silently:
-            raise
+        logger.info("Email sent to %s", recipient_list)
+    except TRANSIENT_EMAIL_ERRORS as e:
+        logger.warning("Transient email error: %e", e)
+        raise self.retry(exc=e, countdown=60)
+    except smtplib.SMTPRecipientsRefused:
+        logger.error("Invalid resipient: %s", recipient_list)
+        raise
