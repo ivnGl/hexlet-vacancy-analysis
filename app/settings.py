@@ -44,13 +44,14 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django_vite",
     "inertia",
     "app.services.hh.hh_parser",
     "app.services.telegram.telegram_parser",
     "app.services.telegram.telegram_channels",
     "app.services.superjob.superjob_parser",
+    "app.services.auth.password_reset",
     "app.services.account",
-    "django_vite",
     "app.services.auth.tinkoff_id",
     "app.services.parser",
     "app.services.ai",
@@ -170,10 +171,10 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Inertia (temporarily disabled; frontend will handle this later)
 
 AUTHENTICATION_BACKENDS = [
-    'app.services.auth.users.logic.authentication.EmailAuthBackend',
-    'app.services.auth.github.backend.GithubBackend',
-    'app.services.auth.yandex_id.backend.YandexBackend',
-    'django.contrib.auth.backends.ModelBackend',
+    "app.services.auth.users.logic.authentication.EmailAuthBackend",
+    "app.services.auth.github.backend.GithubBackend",
+    "app.services.auth.yandex_id.backend.YandexBackend",
+    "django.contrib.auth.backends.ModelBackend",
 ]
 
 EMAIL_BACKEND = os.environ.get(
@@ -193,13 +194,13 @@ EMAIL_TIMEOUT = int(os.environ.get("EMAIL_TIMEOUT", 10))
 
 
 FIXTURE_PATH = 'app/fixtures'
-YANDEX_CLIENT_ID = os.getenv('YANDEX_CLIENT_ID', '')
-YANDEX_CLIENT_SECRET = os.getenv('YANDEX_CLIENT_SECRET', '')
-YANDEX_REDIRECT_URI = os.getenv('YANDEX_REDIRECT_URI', '')
+YANDEX_CLIENT_ID = os.getenv("YANDEX_CLIENT_ID", "")
+YANDEX_CLIENT_SECRET = os.getenv("YANDEX_CLIENT_SECRET", "")
+YANDEX_REDIRECT_URI = os.getenv("YANDEX_REDIRECT_URI", "")
 
-GITHUB_CLIENT_ID = os.getenv('GITHUB_CLIENT_ID', '')
-GITHUB_CLIENT_SECRET = os.getenv('GITHUB_CLIENT_SECRET', '')
-GITHUB_REDIRECT_URI = os.getenv('GITHUB_REDIRECT_URI', '')
+GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID", "")
+GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET", "")
+GITHUB_REDIRECT_URI = os.getenv("GITHUB_REDIRECT_URI", "")
 
 ## django-vite settings
 # use HMR or not.
@@ -221,6 +222,16 @@ DJANGO_VITE_MANIFEST_PATH = os.path.join(STATIC_ROOT, "manifest.json")
 INERTIA_LAYOUT = BASE_DIR / "app" / "templates" / "index.html"
 CSRF_HEADER_NAME = "HTTP_X_XSRF_TOKEN"
 CSRF_COOKIE_NAME = "XSRF-TOKEN"
+
+# Password reset
+EMAIL_FOR_PASSWORD_RESET = os.environ.get("EMAIL_FOR_PASSWORD_RESET", "")
+PASSWORD_RESET_TIMEOUT = os.environ.get("PASSWORD_RESET_TIMEOUT", 3600)
+
+MAX_RETRIES_TO_SEND = os.environ.get("MAX_RETRIES_TO_SEND", 3)
+
+# Celery settings
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379")
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://localhost:6379")
 
 # Tinkoff ID settings
 TINKOFF_ID_CLIENT_ID = os.getenv("TINKOFF_ID_CLIENT_ID", "")
